@@ -5,9 +5,7 @@ function e($v){
 
 function c($n,$e){
 	foreach(array_filter(get_defined_functions()["user"], function($value) use ($n,$e){
-		return(preg_match('/^sabre_' . preg_quote($n, '/') . '_/', $value)); }) as $f){
-			$f($e);
-	}
+		return(preg_match('/^sabre_' . preg_quote($n, '/') . '_/', $value)); }) as $f){ $f($e); }
 }
 
 function f($v){
