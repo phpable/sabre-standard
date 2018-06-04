@@ -1,0 +1,26 @@
+{
+	"name": "able/sabre-standard",
+	"version": "1.0",
+	"type": "library",
+	"keywords": ["phpable", "sabre", "template", "engine", "standard"],
+	"description": "phpABLE template engine standard behavior",
+	"license": "MIT",
+	"authors": [
+		{
+			"name": "hacpaka",
+			"email": "hacpaka@eggbe.com"
+		}
+	],
+	"require": {
+		"php": ">=7.2.0",
+		"able/io": "dev-master",
+		"able/sabre": "dev-master"
+	},
+	"autoload": {
+		"psr-4": {
+			"Able\\Sabre\\Standard\\": "src/"
+		}
+	},
+	"minimum-stability": "dev",
+	"prefer-stable": true
+}
