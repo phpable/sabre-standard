@@ -65,9 +65,9 @@ Compiler::token(new SToken('foreach', function (string $condition) {
 }));
 
 /** @noinspection PhpUnhandledExceptionInspection */
-Compiler::token(new SToken('include', function (string $condition, Queue $Queue, Path $Path) {
-	$Queue->immediately((new Task($Path->append(substr($condition, 2,
-		strlen($condition) - 4) . '.sabre')->toFile()->toReader()))->withPrefix($Queue->indent()));
+Compiler::token(new SToken('include', function (string $condition, Queue $Queue) {
+	$Queue->immediately((new Path(substr($condition, 2,
+		strlen($condition) - 4) . '.sabre')))->withPrefix($Queue->indent());
 }, false));
 
 /** @noinspection PhpUnhandledExceptionInspection */
@@ -84,13 +84,13 @@ Compiler::token(new SToken('param', function ($condition) {
 }, false));
 
 /** @noinspection PhpUnhandledExceptionInspection */
-Compiler::token(new SToken('extends', function (string $condition, Queue $Queue, Path $Path) {
-	$Queue->add((new Task($Path->append(substr($condition, 2,
-		strlen($condition) - 4) . '.sabre')->toFile()->toReader()))->withPrefix($Queue->indent()));
+Compiler::token(new SToken('extends', function (string $condition, Queue $Queue) {
+	$Queue->add((new Path(substr($condition, 2,
+		strlen($condition) - 4) . '.sabre')))->withPrefix($Queue->indent());
 }, false));
 
 /** @noinspection PhpUnhandledExceptionInspection */
-Compiler::token(new SToken('section', function (string $condition, Queue $Queue, Path $Path) {
+Compiler::token(new SToken('section', function (string $condition, Queue $Queue) {
 	static $i = 0;
 	return 's("' . findValidSectionName($condition) . '", function ($e){ extract($e); ';
 }));
@@ -101,7 +101,7 @@ Compiler::finalize('section', new SToken('end', function () {
 }));
 
 /** @noinspection PhpUnhandledExceptionInspection */
-Compiler::token(new SToken('yield', function (string $condition, Queue $Queue, Path $Path) {
+Compiler::token(new SToken('yield', function (string $condition, Queue $Queue) {
 	return 's("' . findValidSectionName($condition) . '");';
 }, false));
 

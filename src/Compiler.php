@@ -11,10 +11,11 @@ use \Able\Reglib\Regexp;
 
 /**
  * @method static void prepend(File $File)
- * @method static \Generator compile(File $File)
  * @method static void trap(STrap $Signature)
  * @method static void token(SToken $Signature)
  * @method static void extend(string $token, SToken $Signature)
+ * @method static void finalize(string $token, SToken $Signature)
+ * @method static \Generator compile(Path $Path)
  */
 class Compiler extends AFacade {
 
