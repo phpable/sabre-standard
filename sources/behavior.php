@@ -1,8 +1,8 @@
 <?php
 use \Able\Sabre\Compiler;
 
-use \Able\Sabre\Utilities\SToken;
-use \Able\Sabre\Utilities\STrap;
+use \Able\Sabre\Structures\SToken;
+use \Able\Sabre\Structures\STrap;
 use \Able\Sabre\Utilities\Queue;
 use \Able\Sabre\Utilities\Task;
 
