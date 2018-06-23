@@ -2,7 +2,9 @@
 use \Able\Sabre\Compiler;
 
 use \Able\Sabre\Structures\SToken;
+use \Able\Sabre\Structures\SState;
 use \Able\Sabre\Structures\STrap;
+
 use \Able\Sabre\Utilities\Queue;
 use \Able\Sabre\Utilities\Task;
 
@@ -28,6 +30,16 @@ function findValidSectionName(string $condition): string {
 
 /** @noinspection PhpUnhandledExceptionInspection */
 Compiler::prepend((new Path(__DIR__))->append('prepared.php')->toFile());
+
+/** @noinspection PhpUnhandledExceptionInspection */
+Compiler::hook('{{--', function(Queue $Queue, SState $SState){
+	$SState->ignore = true;
+});
+
+/** @noinspection PhpUnhandledExceptionInspection */
+Compiler::hook('--}}', function(Queue $Queue, SState $SState){
+	$SState->ignore = false;
+});
 
 /** @noinspection PhpUnhandledExceptionInspection */
 Compiler::trap(new STrap('{{', '}}', function(string $condition){
