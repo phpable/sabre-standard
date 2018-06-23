@@ -10,9 +10,13 @@ use \Able\Sabre\Utilities\Task;
 
 use \Able\IO\File;
 use \Able\IO\Path;
+use \Able\IO\WritingBuffer;
 
 use \Able\Reglib\Regexp;
 use \Able\Reglib\Reglib;
+
+use \Able\Helpers\Str;
+use \Able\Helpers\Arr;
 
 /**
  * @param string $condition
@@ -26,6 +30,39 @@ function findValidSectionName(string $condition): string {
 	}
 
 	return $name;
+}
+
+function checkArraySyntax(string $input): bool {
+	try {
+		$Info = array_slice(token_get_all('<?php ' . trim($input) . ';', TOKEN_PARSE), 1, -1);
+	}catch (\Throwable $Exception){
+		return false;
+	}
+
+	if (Arr::first($Info) !== '[' || Arr::last($Info) !== ']') {
+		return false;
+	}
+
+	$count = 0;
+	$size = count($Info);
+	foreach ($Info as $token) {
+		$size--;
+
+		if (!is_array($token)) {
+			if ($token == '[') {
+				$count++;
+			}
+			if ($token == ']') {
+				if ($count == 1){
+					break;
+				}
+
+				$count--;
+			}
+		}
+	}
+
+	return $count && !$size;
 }
 
 /** @noinspection PhpUnhandledExceptionInspection */
@@ -88,8 +125,36 @@ Compiler::token(new SToken('foreach', function (string $condition) {
 
 /** @noinspection PhpUnhandledExceptionInspection */
 Compiler::token(new SToken('include', function (string $condition, Queue $Queue) {
-	$Queue->immediately((new Path(substr($condition, 2,
-		strlen($condition) - 4) . '.sabre')))->withPrefix($Queue->indent());
+	$condition = preg_split('/\s*,\s*/', substr($condition, 1,
+		strlen($condition) - 2), 2, PREG_SPLIT_NO_EMPTY);
+
+	if (count($condition) > 1){
+		throw new \Exception('Parameters are not allowed here!');
+	}
+
+	$Queue->immediately((new Path(trim(Arr::first($condition), '\'"')
+		. '.sabre')), $Queue->indent());
+}, false));
+
+/** @noinspection PhpUnhandledExceptionInspection */
+Compiler::token(new SToken('involve', function (string $condition, Queue $Queue) {
+	$condition = preg_split('/\s*,\s*/', substr($condition, 1,
+		-1), 2, PREG_SPLIT_NO_EMPTY);
+
+	if (!checkArraySyntax($params = preg_replace('/\s*,\s*/', ',', Arr::value($condition, 1, '[]')))){
+		throw new \Exception('Ivalid parameter!');
+	}
+
+	($Buffer = new WritingBuffer())->write((new Compiler($Queue->getSourcePath()))
+		->compile((new Path(trim(Arr::first($condition), '\'"') . '.sabre')), Compiler::CM_NO_PREPARED));
+
+	$Buffer->process(function($source) use ($Queue){
+		return $Queue->indent() . preg_replace('/(?:\n\r?)+/', '$0' . $Queue->indent(), $source);
+	});
+
+	return 'function ' . ($name = 'f_' . md5(implode($condition))) .'($__data){ extract($__data);'
+		.' unset($__data); ?>' . "\n" . $Buffer->getContent() . "\n<?php } " . $name . "(" . $params . ");";
+
 }, false));
 
 /** @noinspection PhpUnhandledExceptionInspection */
@@ -108,13 +173,13 @@ Compiler::token(new SToken('param', function ($condition) {
 /** @noinspection PhpUnhandledExceptionInspection */
 Compiler::token(new SToken('extends', function (string $condition, Queue $Queue) {
 	$Queue->add((new Path(substr($condition, 2,
-		strlen($condition) - 4) . '.sabre')))->withPrefix($Queue->indent());
+		strlen($condition) - 4) . '.sabre')), $Queue->indent());
 }, false));
 
 /** @noinspection PhpUnhandledExceptionInspection */
 Compiler::token(new SToken('section', function (string $condition, Queue $Queue) {
 	static $i = 0;
-	return 's("' . findValidSectionName($condition) . '", function ($e){ extract($e); ';
+	return 's("' . findValidSectionName($condition) . '", function ($__data){ extract($__data); unset($__data);';
 }));
 
 /** @noinspection PhpUnhandledExceptionInspection */
