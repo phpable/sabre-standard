@@ -42,13 +42,23 @@ Compiler::hook('--}}', function(Queue $Queue, SState $SState){
 });
 
 /** @noinspection PhpUnhandledExceptionInspection */
+Compiler::hook('#verbatim', function(Queue $Queue, SState $SState){
+	$SState->verbatim = true;
+});
+
+/** @noinspection PhpUnhandledExceptionInspection */
+Compiler::hook('#off', function(Queue $Queue, SState $SState){
+	$SState->verbatim = false;
+});
+
+/** @noinspection PhpUnhandledExceptionInspection */
 Compiler::trap(new STrap('{{', '}}', function(string $condition){
 	return '<?=h(' . trim($condition) . ');?>';
 }));
 
 /** @noinspection PhpUnhandledExceptionInspection */
 Compiler::trap(new STrap('{!!', '!!}', function(string $condition){
-	return '<?=(' . trim($condition) . ');?>';
+	return '<?=o(' . trim($condition) . ');?>';
 }));
 
 /** @noinspection PhpUnhandledExceptionInspection */
