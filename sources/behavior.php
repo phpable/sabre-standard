@@ -141,7 +141,7 @@ Compiler::token(new SToken('involve', function (string $condition, Queue $Queue)
 	$condition = preg_split('/\s*,\s*/', substr($condition, 1,
 		-1), 2, PREG_SPLIT_NO_EMPTY);
 
-	if (!checkArraySyntax($params = preg_replace('/\s*,\s*/', ',', Arr::value($condition, 1, '[]')))){
+	if (!checkArraySyntax($condition[1] = preg_replace('/\s*,\s*/', ',', Arr::value($condition, 1, '[]')))){
 		throw new \Exception('Ivalid parameter!');
 	}
 
@@ -153,7 +153,7 @@ Compiler::token(new SToken('involve', function (string $condition, Queue $Queue)
 	});
 
 	return 'function ' . ($name = 'f_' . md5(implode($condition))) .'($__data){ extract($__data);'
-		.' unset($__data); ?>' . "\n" . $Buffer->getContent() . "\n<?php } " . $name . "(" . $params . ");";
+		.' unset($__data); ?>' . "\n" . $Buffer->getContent() . "\n<?php } " . $name . "(" . $condition[1] . ");";
 
 }, false));
 
