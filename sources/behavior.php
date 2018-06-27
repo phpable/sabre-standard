@@ -65,6 +65,20 @@ function checkArraySyntax(string $input): bool {
 	return $count && !$size;
 }
 
+/**
+ * @param string $input
+ * @return bool
+ */
+function checkFragmentSyntax(string $input): bool {
+	try {
+		return count(token_get_all('<?php '
+			. trim($input) . ';', TOKEN_PARSE)) > 0;
+
+	}catch (\Throwable $Exception){
+		return false;
+	}
+}
+
 /** @noinspection PhpUnhandledExceptionInspection */
 Compiler::prepend((new Path(__DIR__))->append('prepared.php')->toFile());
 
@@ -163,12 +177,35 @@ Compiler::token(new SToken('param', function ($condition) {
 		substr($condition, 1, strlen($condition) - 2), 2, PREG_SPLIT_NO_EMPTY));
 
 	if (!preg_match('/\$' . Reglib::VAR. '/', $Params[0])){
-		throw new \Exception('Invalid parameter name!');
+		throw new \Exception('Invalid variable name!');
+	}
+
+	if (count($Params) > 1 && !checkFragmentSyntax($Params[1])){
+		throw new \Exception('Invalid syntax!');
 	}
 
 	return 'if (!isset(' . $Params[0] . ')){ ' . $Params[0] . ' = '
-		. (isset($Params[1]) ? $Params[1] : 'null') . '; }';
+		. Arr::value($Params, 1, 'null') . '; }';
 }, false));
+
+
+/** @noinspection PhpUnhandledExceptionInspection */
+Compiler::token(new SToken('set', function ($condition) {
+	if (!preg_match('/^' . Reglib::VAR. '$/', $condition = substr($condition, 1, -1))){
+		throw new \Exception('Invalid flag name!');
+	}
+
+	return 'g("' . $condition . '");';
+}, false));
+
+/** @noinspection PhpUnhandledExceptionInspection */
+Compiler::token(new SToken('check', function (string $condition) {
+	if (!preg_match('/^' . Reglib::VAR. '$/', $condition = substr($condition, 1, -1))){
+		throw new \Exception('Invalid flag name!');
+	}
+
+	return 'if (g("' . $condition . '", "c")){';
+}));
 
 /** @noinspection PhpUnhandledExceptionInspection */
 Compiler::token(new SToken('extends', function (string $condition, Queue $Queue) {
