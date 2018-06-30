@@ -166,8 +166,8 @@ Compiler::token(new SToken('involve', function (string $condition, Queue $Queue)
 		return $Queue->indent() . preg_replace('/(?:\n\r?)+/', '$0' . $Queue->indent(), $source);
 	});
 
-	return 'function ' . ($name = 'f_' . md5(implode($condition))) .'($__data){ extract($__data);'
-		.' unset($__data); ?>' . "\n" . $Buffer->getContent() . "\n<?php } " . $name . "(" . $condition[1] . ");";
+	return 'function ' . ($name = 'f_' . md5(implode($condition))) .'($__data, $__global){ extract($__global);unset($__global);'
+		. ' extract($__data);unset($__data); ?>' . "\n" . $Buffer->getContent() . "\n<?php } " . $name . "(" . $condition[1] . ", Arr::only(get_defined_vars(), e()));";
 
 }, false));
 
@@ -190,6 +190,24 @@ Compiler::token(new SToken('param', function ($condition) {
 
 
 /** @noinspection PhpUnhandledExceptionInspection */
+Compiler::token(new SToken('global', function ($condition) {
+	$Params = array_map(function(string $value){ return trim($value); }, preg_split('/,+/',
+		substr($condition, 1, strlen($condition) - 2), 2, PREG_SPLIT_NO_EMPTY));
+
+	if (!preg_match('/\$' . Reglib::VAR. '/', $Params[0])){
+		throw new \Exception('Invalid variable name!');
+	}
+
+	if (count($Params) > 1 && !checkFragmentSyntax($Params[1])){
+		throw new \Exception('Invalid syntax!');
+	}
+
+	return 'if (!isset(' . $Params[0] . ')){ ' . $Params[0] . ' = '
+		. Arr::value($Params, 1, 'null') . '; }; e("' . substr($Params[0], 1) . '");';
+}, false));
+
+
+/** @noinspection PhpUnhandledExceptionInspection */
 Compiler::token(new SToken('set', function ($condition) {
 	if (!preg_match('/^' . Reglib::VAR. '$/', $condition = substr($condition, 1, -1))){
 		throw new \Exception('Invalid flag name!');
@@ -199,12 +217,21 @@ Compiler::token(new SToken('set', function ($condition) {
 }, false));
 
 /** @noinspection PhpUnhandledExceptionInspection */
-Compiler::token(new SToken('check', function (string $condition) {
+Compiler::token(new SToken('on', function (string $condition) {
 	if (!preg_match('/^' . Reglib::VAR. '$/', $condition = substr($condition, 1, -1))){
 		throw new \Exception('Invalid flag name!');
 	}
 
 	return 'if (g("' . $condition . '", "c")){';
+}));
+
+/** @noinspection PhpUnhandledExceptionInspection */
+Compiler::token(new SToken('off', function (string $condition) {
+	if (!preg_match('/^' . Reglib::VAR. '$/', $condition = substr($condition, 1, -1))){
+		throw new \Exception('Invalid flag name!');
+	}
+
+	return 'if (g("' . $condition . '", "n")){';
 }));
 
 /** @noinspection PhpUnhandledExceptionInspection */
@@ -216,12 +243,13 @@ Compiler::token(new SToken('extends', function (string $condition, Queue $Queue)
 /** @noinspection PhpUnhandledExceptionInspection */
 Compiler::token(new SToken('section', function (string $condition, Queue $Queue) {
 	static $i = 0;
-	return 's("' . findValidSectionName($condition) . '", function ($__data){ extract($__data); unset($__data);';
+	return 's("' . findValidSectionName($condition) . '", function ($__data, $__global){'
+	. 'extract($__global);unset($__global);extract($__data);unset($__data);';
 }));
 
 /** @noinspection PhpUnhandledExceptionInspection */
 Compiler::finalize('section', new SToken('end', function () {
-	return '}, f(get_defined_vars()));';
+	return '}, f(get_defined_vars()), Arr::only(get_defined_vars(), e()));';
 }));
 
 /** @noinspection PhpUnhandledExceptionInspection */
