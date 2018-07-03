@@ -203,7 +203,7 @@ Compiler::token(new SToken('global', function ($condition) {
 	}
 
 	return 'if (!isset(' . $Params[0] . ')){ ' . $Params[0] . ' = '
-		. Arr::value($Params, 1, 'null') . '; }; e("' . substr($Params[0], 1) . '");';
+		. Arr::value($Params, 1, 'null') . '; }; g("' . substr($Params[0], 1) . '");';
 }, false));
 
 
@@ -213,7 +213,7 @@ Compiler::token(new SToken('set', function ($condition) {
 		throw new \Exception('Invalid flag name!');
 	}
 
-	return 'g("' . $condition . '");';
+	return 'b("' . $condition . '");';
 }, false));
 
 /** @noinspection PhpUnhandledExceptionInspection */
@@ -222,7 +222,7 @@ Compiler::token(new SToken('on', function (string $condition) {
 		throw new \Exception('Invalid flag name!');
 	}
 
-	return 'if (g("' . $condition . '", "c")){';
+	return 'if (b("' . $condition . '", "c")){';
 }));
 
 /** @noinspection PhpUnhandledExceptionInspection */
@@ -231,7 +231,7 @@ Compiler::token(new SToken('off', function (string $condition) {
 		throw new \Exception('Invalid flag name!');
 	}
 
-	return 'if (g("' . $condition . '", "n")){';
+	return 'if (b("' . $condition . '", "n")){';
 }));
 
 /** @noinspection PhpUnhandledExceptionInspection */
