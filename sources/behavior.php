@@ -167,7 +167,7 @@ Compiler::token(new SToken('involve', function (string $condition, Queue $Queue)
 	});
 
 	return 'function ' . ($name = 'f_' . md5(implode($condition))) .'($__data, $__global){ extract($__global);unset($__global);'
-		. ' extract($__data);unset($__data); ?>' . "\n" . $Buffer->getContent() . "\n<?php } " . $name . "(" . $condition[1] . ", Arr::only(get_defined_vars(), e()));";
+		. ' extract($__data);unset($__data); ?>' . "\n" . $Buffer->getContent() . "\n<?php } " . $name . "(" . $condition[1] . ", Arr::only(get_defined_vars(), g()));";
 
 }, false));
 
