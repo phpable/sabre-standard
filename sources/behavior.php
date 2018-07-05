@@ -249,7 +249,7 @@ Compiler::token(new SToken('section', function (string $condition, Queue $Queue)
 
 /** @noinspection PhpUnhandledExceptionInspection */
 Compiler::finalize('section', new SToken('end', function () {
-	return '}, f(get_defined_vars()), Arr::only(get_defined_vars(), e()));';
+	return '}, f(get_defined_vars()), Arr::only(get_defined_vars(), g()));';
 }));
 
 /** @noinspection PhpUnhandledExceptionInspection */
