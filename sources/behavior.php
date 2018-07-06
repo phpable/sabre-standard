@@ -156,7 +156,7 @@ Compiler::token(new SToken('involve', function (string $condition, Queue $Queue)
 		-1), 2, PREG_SPLIT_NO_EMPTY);
 
 	if (!checkArraySyntax($condition[1] = preg_replace('/\s*,\s*/', ',', Arr::value($condition, 1, '[]')))){
-		throw new \Exception('Ivalid parameter!');
+		throw new \Exception('The assigned parameter is not an array!');
 	}
 
 	($Buffer = new WritingBuffer())->write((new Compiler($Queue->getSourcePath()))
