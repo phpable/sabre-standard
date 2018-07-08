@@ -1,4 +1,6 @@
 <?php
+namespace Able\Sabre\Standard;
+
 use \Able\Sabre\Compiler;
 
 use \Able\Sabre\Structures\SToken;
@@ -32,6 +34,24 @@ function findValidSectionName(string $condition): string {
 	return $name;
 }
 
+/**
+ * @param string $input
+ * @return bool
+ */
+function checkFragmentSyntax(string $input): bool {
+	try {
+		return count(token_get_all('<?php '
+			. trim($input) . ';', TOKEN_PARSE)) > 0;
+
+	}catch (\Throwable $Exception){
+		return false;
+	}
+}
+
+/**
+ * @param string $input
+ * @return bool
+ */
 function checkArraySyntax(string $input): bool {
 	try {
 		$Info = array_slice(token_get_all('<?php ' . trim($input) . ';', TOKEN_PARSE), 1, -1);
@@ -66,24 +86,10 @@ function checkArraySyntax(string $input): bool {
 }
 
 /**
- * @param string $input
- * @return bool
- */
-function checkFragmentSyntax(string $input): bool {
-	try {
-		return count(token_get_all('<?php '
-			. trim($input) . ';', TOKEN_PARSE)) > 0;
-
-	}catch (\Throwable $Exception){
-		return false;
-	}
-}
-
-/**
  * @param Path $Path
  * @param Queue $Queue
  * @return WritingBuffer
- * @throws Exception
+ * @throws \Exception
  */
 function involve(Path $Path, Queue $Queue): WritingBuffer {
 	($Buffer = new WritingBuffer())->write((new Compiler($Queue->getSourcePath()))
