@@ -79,6 +79,21 @@ function checkFragmentSyntax(string $input): bool {
 	}
 }
 
+/**
+ * @param Path $Path
+ * @param Queue $Queue
+ * @return WritingBuffer
+ * @throws Exception
+ */
+function involve(Path $Path, Queue $Queue): WritingBuffer {
+	($Buffer = new WritingBuffer())->write((new Compiler($Queue->getSourcePath()))
+		->compile($Path, Compiler::CM_NO_PREPARED));
+
+	return $Buffer->process(function($source) use ($Queue){
+		return $Queue->indent() . preg_replace('/(?:\n\r?)+/', '$0' . $Queue->indent(), $source);
+	});
+}
+
 /** @noinspection PhpUnhandledExceptionInspection */
 Compiler::prepend((new Path(__DIR__))->append('prepared.php')->toFile());
 
@@ -159,16 +174,8 @@ Compiler::token(new SToken('involve', function (string $condition, Queue $Queue)
 		throw new \Exception('The assigned parameter is not an array!');
 	}
 
-	($Buffer = new WritingBuffer())->write((new Compiler($Queue->getSourcePath()))
-		->compile((new Path(trim(Arr::first($condition), '\'"') . '.sabre')), Compiler::CM_NO_PREPARED));
-
-	$Buffer->process(function($source) use ($Queue){
-		return $Queue->indent() . preg_replace('/(?:\n\r?)+/', '$0' . $Queue->indent(), $source);
-	});
-
 	return 'function ' . ($name = 'f_' . md5(implode($condition))) .'($__data, $__global){ extract($__global);unset($__global);'
-		. ' extract($__data);unset($__data); ?>' . "\n" . $Buffer->getContent() . "\n<?php } " . $name . "(" . $condition[1] . ", Arr::only(get_defined_vars(), g()));";
-
+		. ' extract($__data);unset($__data); ?>' . "\n" . involve(new Path(trim(Arr::first($condition), '\'"') . '.sabre'), $Queue)->getContent() . "\n<?php } " . $name . "(" . $condition[1] . ", Arr::only(get_defined_vars(), g()));";
 }, false));
 
 /** @noinspection PhpUnhandledExceptionInspection */
