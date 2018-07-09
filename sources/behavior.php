@@ -86,17 +86,18 @@ function checkArraySyntax(string $input): bool {
 }
 
 /**
- * @param Path $Path
- * @param Queue $Queue
+ * @param Path $Source
+ * @param Path $Root
+ * @param string $indent
  * @return WritingBuffer
  * @throws \Exception
  */
-function involve(Path $Path, Queue $Queue): WritingBuffer {
-	($Buffer = new WritingBuffer())->write((new Compiler($Queue->getSourcePath()))
-		->compile($Path, Compiler::CM_NO_PREPARED));
+function involve(Path $Source, Path $Root, string $indent): WritingBuffer {
+	($Buffer = new WritingBuffer())->write((new Compiler($Root))
+		->compile($Source, Compiler::CM_NO_PREPARED));
 
-	return $Buffer->process(function($source) use ($Queue){
-		return $Queue->indent() . preg_replace('/(?:\n\r?)+/', '$0' . $Queue->indent(), $source);
+	return $Buffer->process(function($source) use ($indent){
+		return $indent . preg_replace('/(?:\n\r?)+/', '$0' . $indent, $source);
 	});
 }
 
@@ -181,7 +182,8 @@ Compiler::token(new SToken('involve', function (string $condition, Queue $Queue)
 	}
 
 	return 'function ' . ($name = 'f_' . md5(implode($condition))) .'($__data, $__global){ extract($__global);unset($__global);'
-		. ' extract($__data);unset($__data); ?>' . "\n" . involve(new Path(trim(Arr::first($condition), '\'"') . '.sabre'), $Queue)->getContent() . "\n<?php } " . $name . "(" . $condition[1] . ", Arr::only(get_defined_vars(), g()));";
+		. 'extract($__data);unset($__data); ?>' . "\n" . involve(new Path(trim(Arr::first($condition), '\'"') . '.sabre'), $Queue->getSourcePath(),
+			$Queue->indent())->getContent() . "\n<?php } " . $name . "(" . $condition[1] . ", Arr::only(get_defined_vars(), g()));";
 }, false));
 
 /** @noinspection PhpUnhandledExceptionInspection */
