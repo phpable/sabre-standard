@@ -21,20 +21,6 @@ use \Able\Helpers\Str;
 use \Able\Helpers\Arr;
 
 /**
- * @param string $condition
- * @return string
- * @throws \Exception
- */
-function findValidSectionName(string $condition): string {
-	if (!preg_match('/^' . Reglib::VAR . '/', $name = substr((new Regexp('/^\(('
-		. Reglib::QUOTED . ')\)$/'))->take($condition, 1), 1, -1))){
-			throw new \Exception('Invalid section name "' . $name. '"!');
-	}
-
-	return $name;
-}
-
-/**
  * @param string $input
  * @return bool
  */
@@ -136,131 +122,115 @@ Compiler::trap(new STrap('{!!', '!!}', function(string $condition){
 
 /** @noinspection PhpUnhandledExceptionInspection */
 Compiler::token(new SToken('if', function (string $condition) {
-	return 'if ' . $condition . '{';
-}));
+	return 'if (' . $condition . '){';
+}, 1));
 
 /** @noinspection PhpUnhandledExceptionInspection */
 Compiler::extend('if', new SToken('elseif', function (string $condition) {
-	return '} elseif ' . $condition . ' {';
-}));
+	return '} elseif (' . $condition . ') {';
+}, 1));
 
 /** @noinspection PhpUnhandledExceptionInspection */
-Compiler::extend('if', new SToken('else', function (string $condition) {
+Compiler::extend('if', new SToken('else', function () {
 	return '} else {';
 }));
 
 /** @noinspection PhpUnhandledExceptionInspection */
 Compiler::token(new SToken('for', function (string $condition) {
-	return 'for ' . $condition . '{';
-}));
+	return 'for (' . $condition . '){';
+}, 1));
 
 /** @noinspection PhpUnhandledExceptionInspection */
 Compiler::token(new SToken('foreach', function (string $condition) {
-	return 'foreach ' . $condition . '{';
-}));
+	return 'foreach (' . $condition . '){';
+}, 1));
 
 /** @noinspection PhpUnhandledExceptionInspection */
-Compiler::token(new SToken('include', function (string $condition, Queue $Queue) {
-	$condition = preg_split('/\s*,\s*/', substr($condition, 1,
-		strlen($condition) - 2), 2, PREG_SPLIT_NO_EMPTY);
-
-	if (count($condition) > 1){
-		throw new \Exception('Parameters are not allowed here!');
-	}
-
-	$Queue->immediately((new Path(trim(Arr::first($condition), '\'"')
+Compiler::token(new SToken('include', function (string $filename, Queue $Queue) {
+	$Queue->immediately((new Path(trim($filename, '\'"')
 		. '.sabre')), $Queue->indent());
-}, false));
+}, 1, false));
 
 /** @noinspection PhpUnhandledExceptionInspection */
-Compiler::token(new SToken('involve', function (string $condition, Queue $Queue) {
-	$condition = preg_split('/\s*,\s*/', substr($condition, 1,
-		-1), 2, PREG_SPLIT_NO_EMPTY);
-
-	if (!checkArraySyntax($condition[1] = preg_replace('/\s*,\s*/', ',', Arr::value($condition, 1, '[]')))){
+Compiler::token(new SToken('involve', function ($filename, $params, Queue $Queue) {
+	if (!checkArraySyntax($params = preg_replace('/\s*,\s*/', ',', !is_null($params) ? $params : '[]'))){
 		throw new \Exception('The assigned parameter is not an array!');
 	}
 
-	return 'function ' . ($name = 'f_' . md5(implode($condition))) .'($__data, $__global){ extract($__global);unset($__global);'
-		. 'extract($__data);unset($__data); ?>' . "\n" . involve(new Path(trim(Arr::first($condition), '\'"') . '.sabre'), $Queue->getSourcePath(),
-			$Queue->indent())->getContent() . "\n<?php } " . $name . "(" . $condition[1] . ", Arr::only(get_defined_vars(), g()));";
-}, false));
+	return 'function ' . ($name = 'f_' . md5($filename . $params)) .'($__data, $__global){ extract($__global);unset($__global);'
+		. 'extract($__data);unset($__data); ?>' . "\n" . involve(new Path(trim($filename, '\'"') . '.sabre'), $Queue->getSourcePath(),
+			$Queue->indent())->getContent() . "\n<?php } " . $name . "(" . $params . ", Arr::only(get_defined_vars(), g()));";
+}, 2, false));
 
 /** @noinspection PhpUnhandledExceptionInspection */
-Compiler::token(new SToken('param', function ($condition) {
-	$Params = array_map(function(string $value){ return trim($value); }, preg_split('/,+/',
-		substr($condition, 1, strlen($condition) - 2), 2, PREG_SPLIT_NO_EMPTY));
-
-	if (!preg_match('/\$' . Reglib::VAR. '/', $Params[0])){
+Compiler::token(new SToken('param', function ($name, $value) {
+	if (!preg_match('/\$' . Reglib::VAR. '/', $name)){
 		throw new \Exception('Invalid variable name!');
 	}
 
-	if (count($Params) > 1 && !checkFragmentSyntax($Params[1])){
+	if (!is_null($value) && !checkFragmentSyntax($value)){
 		throw new \Exception('Invalid syntax!');
 	}
 
-	return 'if (!isset(' . $Params[0] . ')){ ' . $Params[0] . ' = '
-		. Arr::value($Params, 1, 'null') . '; }';
-}, false));
-
+	return 'if (!isset(' . $name . ')){ ' . $name . ' = '
+		. (!is_null($value)? $value : 'null') . '; }';
+}, 2, false));
 
 /** @noinspection PhpUnhandledExceptionInspection */
-Compiler::token(new SToken('global', function ($condition) {
-	$Params = array_map(function(string $value){ return trim($value); }, preg_split('/,+/',
-		substr($condition, 1, strlen($condition) - 2), 2, PREG_SPLIT_NO_EMPTY));
-
-	if (!preg_match('/\$' . Reglib::VAR. '/', $Params[0])){
+Compiler::token(new SToken('global', function ($name, $value) {
+	if (!preg_match('/\$' . Reglib::VAR. '/', $name)){
 		throw new \Exception('Invalid variable name!');
 	}
 
-	if (count($Params) > 1 && !checkFragmentSyntax($Params[1])){
+	if (!is_null($value) && !checkFragmentSyntax($value)){
 		throw new \Exception('Invalid syntax!');
 	}
 
-	return 'if (!isset(' . $Params[0] . ')){ ' . $Params[0] . ' = '
-		. Arr::value($Params, 1, 'null') . '; }; g("' . substr($Params[0], 1) . '");';
-}, false));
-
+	return 'if (!isset(' . $name . ')){ ' . $name . ' = '
+		. (!is_null($value)? $value : 'null') . '; }; g("' . substr($name, 1) . '");';
+}, 2, false));
 
 /** @noinspection PhpUnhandledExceptionInspection */
-Compiler::token(new SToken('set', function ($condition) {
-	if (!preg_match('/^' . Reglib::VAR. '$/', $condition = substr($condition, 1, -1))){
+Compiler::token(new SToken('set', function ($name) {
+	if (!preg_match('/^' . Reglib::VAR. '$/', $name = substr($name, 1, -1))){
 		throw new \Exception('Invalid flag name!');
 	}
 
-	return 'b("' . $condition . '");';
-}, false));
+	return 'b("' . $name . '");';
+}, 1, false));
 
 /** @noinspection PhpUnhandledExceptionInspection */
-Compiler::token(new SToken('on', function (string $condition) {
-	if (!preg_match('/^' . Reglib::VAR. '$/', $condition = substr($condition, 1, -1))){
+Compiler::token(new SToken('on', function (string $name) {
+	if (!preg_match('/^' . Reglib::VAR. '$/', $name = trim($name, '\'"'))){
 		throw new \Exception('Invalid flag name!');
 	}
 
-	return 'if (b("' . $condition . '", "c")){';
-}));
+	return 'if (b("' . $name . '", "c")){';
+}, 1));
 
 /** @noinspection PhpUnhandledExceptionInspection */
-Compiler::token(new SToken('off', function (string $condition) {
-	if (!preg_match('/^' . Reglib::VAR. '$/', $condition = substr($condition, 1, -1))){
+Compiler::token(new SToken('off', function (string $name) {
+	if (!preg_match('/^' . Reglib::VAR. '$/', $name = trim($name, '\'"'))){
 		throw new \Exception('Invalid flag name!');
 	}
 
-	return 'if (b("' . $condition . '", "n")){';
-}));
+	return 'if (b("' . $name . '", "n")){';
+}, 1));
 
 /** @noinspection PhpUnhandledExceptionInspection */
-Compiler::token(new SToken('extends', function (string $condition, Queue $Queue) {
-	$Queue->add((new Path(substr($condition, 2,
-		strlen($condition) - 4) . '.sabre')), $Queue->indent());
-}, false));
+Compiler::token(new SToken('extends', function (string $name, Queue $Queue) {
+	$Queue->add((new Path(trim($name, '\'"') . '.sabre')), $Queue->indent());
+}, 1, false));
 
 /** @noinspection PhpUnhandledExceptionInspection */
-Compiler::token(new SToken('section', function (string $condition, Queue $Queue) {
-	static $i = 0;
-	return 's("' . findValidSectionName($condition) . '", function ($__data, $__global){'
-	. 'extract($__global);unset($__global);extract($__data);unset($__data);';
-}));
+Compiler::token(new SToken('section', function (string $name, Queue $Queue) {
+	if (!preg_match('/^' . Reglib::VAR . '$/', $name = trim($name, '\'"'))){
+		throw new \Exception('Invalid section name "' . $name. '"!');
+	}
+
+	return 's("' . $name . '", function ($__data, $__global){'
+		. 'extract($__global);unset($__global);extract($__data);unset($__data);';
+}, 1));
 
 /** @noinspection PhpUnhandledExceptionInspection */
 Compiler::finalize('section', new SToken('end', function () {
@@ -268,7 +238,7 @@ Compiler::finalize('section', new SToken('end', function () {
 }));
 
 /** @noinspection PhpUnhandledExceptionInspection */
-Compiler::token(new SToken('yield', function (string $condition, Queue $Queue) {
-	return 's("' . findValidSectionName($condition) . '");';
-}, false));
+Compiler::token(new SToken('yield', function (string $name, Queue $Queue) {
+	return 's("' . trim($name, '\'"') . '");';
+}, 1, false));
 
