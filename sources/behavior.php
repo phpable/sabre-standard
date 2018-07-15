@@ -191,33 +191,6 @@ Compiler::token(new SToken('global', function ($name, $value) {
 }, 2, false));
 
 /** @noinspection PhpUnhandledExceptionInspection */
-Compiler::token(new SToken('set', function ($name) {
-	if (!preg_match('/^' . Reglib::VAR. '$/', $name = substr($name, 1, -1))){
-		throw new \Exception('Invalid flag name!');
-	}
-
-	return 'b("' . $name . '");';
-}, 1, false));
-
-/** @noinspection PhpUnhandledExceptionInspection */
-Compiler::token(new SToken('on', function (string $name) {
-	if (!preg_match('/^' . Reglib::VAR. '$/', $name = trim($name, '\'"'))){
-		throw new \Exception('Invalid flag name!');
-	}
-
-	return 'if (b("' . $name . '", "c")){';
-}, 1));
-
-/** @noinspection PhpUnhandledExceptionInspection */
-Compiler::token(new SToken('off', function (string $name) {
-	if (!preg_match('/^' . Reglib::VAR. '$/', $name = trim($name, '\'"'))){
-		throw new \Exception('Invalid flag name!');
-	}
-
-	return 'if (b("' . $name . '", "n")){';
-}, 1));
-
-/** @noinspection PhpUnhandledExceptionInspection */
 Compiler::token(new SToken('extends', function (string $name, Queue $Queue) {
 	$Queue->add((new Path(trim($name, '\'"') . '.sabre')), $Queue->indent());
 }, 1, false));
