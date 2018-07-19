@@ -71,24 +71,8 @@ function checkArraySyntax(string $input): bool {
 	return $count && !$size;
 }
 
-/**
- * @param Path $Source
- * @param Path $Root
- * @param string $indent
- * @return WritingBuffer
- * @throws \Exception
- */
-function involve(Path $Source, Path $Root, string $indent): WritingBuffer {
-	($Buffer = new WritingBuffer())->write((new Compiler($Root))
-		->compile($Source, Compiler::CM_NO_PREPARED));
-
-	return $Buffer->process(function($source) use ($indent){
-		return $indent . preg_replace('/(?:\n\r?)+/', '$0' . $indent, $source);
-	});
-}
-
 /** @noinspection PhpUnhandledExceptionInspection */
-Compiler::prepend((new Path(__DIR__))->append('prepared.php')->toFile());
+//Compiler::prepend((new Path(__DIR__))->append('prepared.php')->toFile());
 
 /** @noinspection PhpUnhandledExceptionInspection */
 Compiler::hook('{{--', function(Queue $Queue, SState $SState){
@@ -147,8 +131,7 @@ Compiler::token(new SToken('foreach', function (string $condition) {
 
 /** @noinspection PhpUnhandledExceptionInspection */
 Compiler::token(new SToken('include', function (string $filename, Queue $Queue) {
-	$Queue->immediately((new Path(trim($filename, '\'"')
-		. '.sabre')), $Queue->indent());
+	$Queue->immediately((new Path(trim($filename, '\'"') . '.sabre')));
 }, 1, false));
 
 /** @noinspection PhpUnhandledExceptionInspection */
@@ -157,9 +140,11 @@ Compiler::token(new SToken('involve', function ($filename, $params, Queue $Queue
 		throw new \Exception('The assigned parameter is not an array!');
 	}
 
+	($Buffer = new WritingBuffer())->write((new Compiler($Queue->getSourcePath()))
+		->compile(new Path(trim($filename, '\'"') . '.sabre')));
+
 	return 'function ' . ($name = 'f_' . md5($filename . $params)) .'($__data, $__global){ extract($__global);unset($__global);'
-		. 'extract($__data);unset($__data); ?>' . "\n" . involve(new Path(trim($filename, '\'"') . '.sabre'), $Queue->getSourcePath(),
-			$Queue->indent())->getContent() . "\n<?php } " . $name . "(" . $params . ", Arr::only(get_defined_vars(), g()));";
+		. 'extract($__data);unset($__data); ?>' . "\n" . $Buffer->getContent() . "\n<?php } " . $name . "(" . $params . ", Arr::only(get_defined_vars(), g()));";
 }, 2, false));
 
 /** @noinspection PhpUnhandledExceptionInspection */
@@ -192,7 +177,7 @@ Compiler::token(new SToken('global', function ($name, $value) {
 
 /** @noinspection PhpUnhandledExceptionInspection */
 Compiler::token(new SToken('extends', function (string $name, Queue $Queue) {
-	$Queue->add((new Path(trim($name, '\'"') . '.sabre')), $Queue->indent());
+	$Queue->add((new Path(trim($name, '\'"') . '.sabre')));
 }, 1, false));
 
 /** @noinspection PhpUnhandledExceptionInspection */

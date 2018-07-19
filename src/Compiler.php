@@ -16,7 +16,6 @@ use \Able\Reglib\Regexp;
  * @method static void token(SToken $Signature)
  * @method static void extend(string $token, SToken $Signature)
  * @method static void finalize(string $token, SToken $Signature)
- * @method static \Generator compile(Path $Path)
  */
 class Compiler extends AFacade {
 
@@ -46,6 +45,17 @@ class Compiler extends AFacade {
 	 */
 	protected static final function provide(): array {
 		return [self::$Source];
+	}
+
+	/**
+	 * @param Path $Path
+	 * @return \Generator
+	 * @throws \Exception
+	 */
+	public static final function compile(Path $Path): \Generator{
+		return parent::compile($Path, (new Path(dirname(__DIR__),
+			'sources'))->append('prepared.php')->toFile()->toBuffer()->process(function ($value){
+				return (new Regexp('/\s*\\?>$/'))->erase(trim($value)) . "\n?>\n"; }));
 	}
 }
 
