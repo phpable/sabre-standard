@@ -85,12 +85,12 @@ Compiler::hook('--}}', function(Queue $Queue, SState $SState){
 });
 
 /** @noinspection PhpUnhandledExceptionInspection */
-Compiler::hook('#verbatim', function(Queue $Queue, SState $SState){
+Compiler::hook('{{##', function(Queue $Queue, SState $SState){
 	$SState->verbatim = true;
 });
 
 /** @noinspection PhpUnhandledExceptionInspection */
-Compiler::hook('#off', function(Queue $Queue, SState $SState){
+Compiler::hook('##}}', function(Queue $Queue, SState $SState){
 	$SState->verbatim = false;
 });
 
