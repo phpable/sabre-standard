@@ -143,12 +143,10 @@ Compiler::token(new SToken('involve', function ($filename, $params, Queue $Queue
 	($Buffer = new WritingBuffer())->write((new Compiler($Queue->getSourcePath()))
 		->compile(new Path(trim($filename, '\'"') . '.sabre')));
 
-	$Buffer->process(function(string $content) use ($filename, $params){
+	return $Buffer->process(function(string $content) use ($filename, $params){
 		return '<?php function ' . ($name = 'f_' . md5($filename . $params)) .'($__data, $__global){ extract($__global);unset($__global);'
 			. 'extract($__data);unset($__data); ?>' . "\n" . $content . "\n<?php } " . $name . "(" . $params . ", Arr::only(get_defined_vars(), g())); ?>";
-	});
-
-	return $Buffer->toReadingBuffer();
+	})->toReadingBuffer();
 }, 2, false));
 
 /** @noinspection PhpUnhandledExceptionInspection */
