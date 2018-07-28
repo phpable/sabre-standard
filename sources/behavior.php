@@ -106,27 +106,27 @@ Compiler::trap(new STrap('{!!', '!!}', function(string $condition){
 
 /** @noinspection PhpUnhandledExceptionInspection */
 Compiler::token(new SToken('if', function (string $condition) {
-	return 'if (' . $condition . '){';
+	return '<?php if (' . $condition . '){?>';
 }, 1));
 
 /** @noinspection PhpUnhandledExceptionInspection */
 Compiler::extend('if', new SToken('elseif', function (string $condition) {
-	return '} elseif (' . $condition . ') {';
+	return '<?php } elseif (' . $condition . ') {?>';
 }, 1));
 
 /** @noinspection PhpUnhandledExceptionInspection */
 Compiler::extend('if', new SToken('else', function () {
-	return '} else {';
+	return '<?php } else {?>';
 }));
 
 /** @noinspection PhpUnhandledExceptionInspection */
 Compiler::token(new SToken('for', function (string $condition) {
-	return 'for (' . $condition . '){';
+	return '<?php for (' . $condition . '){?>';
 }, 1));
 
 /** @noinspection PhpUnhandledExceptionInspection */
 Compiler::token(new SToken('foreach', function (string $condition) {
-	return 'foreach (' . $condition . '){';
+	return '<?php foreach (' . $condition . '){ ?>';
 }, 1));
 
 /** @noinspection PhpUnhandledExceptionInspection */
@@ -143,8 +143,12 @@ Compiler::token(new SToken('involve', function ($filename, $params, Queue $Queue
 	($Buffer = new WritingBuffer())->write((new Compiler($Queue->getSourcePath()))
 		->compile(new Path(trim($filename, '\'"') . '.sabre')));
 
-	return 'function ' . ($name = 'f_' . md5($filename . $params)) .'($__data, $__global){ extract($__global);unset($__global);'
-		. 'extract($__data);unset($__data); ?>' . "\n" . $Buffer->getContent() . "\n<?php } " . $name . "(" . $params . ", Arr::only(get_defined_vars(), g()));";
+	$Buffer->process(function(string $content) use ($filename, $params){
+		return '<?php function ' . ($name = 'f_' . md5($filename . $params)) .'($__data, $__global){ extract($__global);unset($__global);'
+			. 'extract($__data);unset($__data); ?>' . "\n" . $content . "\n<?php } " . $name . "(" . $params . ", Arr::only(get_defined_vars(), g())); ?>";
+	});
+
+	return $Buffer->toReadingBuffer();
 }, 2, false));
 
 /** @noinspection PhpUnhandledExceptionInspection */
@@ -157,8 +161,8 @@ Compiler::token(new SToken('param', function ($name, $value) {
 		throw new \Exception('Invalid syntax!');
 	}
 
-	return 'if (!isset(' . $name . ')){ ' . $name . ' = '
-		. (!is_null($value)? $value : 'null') . '; }';
+	return '<?php if (!isset(' . $name . ')){ ' . $name . ' = '
+		. (!is_null($value)? $value : 'null') . '; }?>';
 }, 2, false));
 
 /** @noinspection PhpUnhandledExceptionInspection */
@@ -171,8 +175,8 @@ Compiler::token(new SToken('global', function ($name, $value) {
 		throw new \Exception('Invalid syntax!');
 	}
 
-	return 'if (!isset(' . $name . ')){ ' . $name . ' = '
-		. (!is_null($value)? $value : 'null') . '; }; g("' . substr($name, 1) . '");';
+	return '<?php if (!isset(' . $name . ')){ ' . $name . ' = '
+		. (!is_null($value)? $value : 'null') . '; }; g("' . substr($name, 1) . '");?>';
 }, 2, false));
 
 /** @noinspection PhpUnhandledExceptionInspection */
@@ -186,17 +190,17 @@ Compiler::token(new SToken('section', function (string $name, Queue $Queue) {
 		throw new \Exception('Invalid section name "' . $name. '"!');
 	}
 
-	return 's("' . $name . '", function ($__data, $__global){'
-		. 'extract($__global);unset($__global);extract($__data);unset($__data);';
+	return '<?php s("' . $name . '", function ($__data, $__global){'
+		. 'extract($__global);unset($__global);extract($__data);unset($__data);?>';
 }, 1));
 
 /** @noinspection PhpUnhandledExceptionInspection */
 Compiler::finalize('section', new SToken('end', function () {
-	return '}, f(get_defined_vars()), Arr::only(get_defined_vars(), g()));';
+	return '<?php }, f(get_defined_vars()), Arr::only(get_defined_vars(), g()));?>';
 }));
 
 /** @noinspection PhpUnhandledExceptionInspection */
 Compiler::token(new SToken('yield', function (string $name, Queue $Queue) {
-	return 's("' . trim($name, '\'"') . '");';
+	return '<?php s("' . trim($name, '\'"') . '"); ?>';
 }, 1, false));
 
