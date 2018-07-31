@@ -54,7 +54,7 @@ class Compiler extends AFacade {
 	 */
 	public static final function compile(Path $Path): \Generator{
 		return parent::compile($Path, (new Path(dirname(__DIR__),
-			'sources'))->append('prepared.php')->toFile()->toBuffer()->process(function ($value){
+			'sources'))->append('prepared.php')->toFile()->toReadingBuffer()->process(function ($value){
 				return (new Regexp('/\s*\\?>$/'))->erase(trim($value)) . "\n?>\n"; }));
 	}
 }
