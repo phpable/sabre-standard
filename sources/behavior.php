@@ -143,11 +143,49 @@ Compiler::token(new SToken('involve', function ($filename, $params, Queue $Queue
 	($Buffer = new WritingBuffer())->write((new Compiler($Queue->getSourcePath()))
 		->compile(new Path(trim($filename, '\'"') . '.sabre')));
 
-	return $Buffer->process(function(string $content) use ($filename, $params){
+	return $Buffer->process(function($content) use ($filename, $params){
 		return '<?php function ' . ($name = 'f_' . md5($filename . $params)) .'($__data, $__global){ extract($__global);unset($__global);'
 			. 'extract($__data);unset($__data); ?>' . "\n" . $content . "\n<?php } " . $name . "(" . $params . ", Arr::only(get_defined_vars(), g())); ?>";
 	})->toReadingBuffer();
 }, 2, false));
+
+
+/** @noinspection PhpUnhandledExceptionInspection */
+Compiler::token(new SToken('list', function ($dirname, $condition, $params, Queue $Queue) {
+	if (!checkArraySyntax($params = preg_replace('/\s*,\s*/', ',', !is_null($params) ? $params : '[]'))){
+		throw new \Exception('The assigned parameter is not an array!');
+	}
+
+	$Items = [];
+	$Output = new WritingBuffer();
+
+	foreach ((new Path($dirname))->prepend($Queue->getSourcePath())
+		->toDerectory()->filter('*.sabre') as $index => $Path){
+			$name = 'f_' . md5(implode([$index, $dirname, $condition, $params]));
+
+			if (!$Path->isDot() && $Path->isFile()){
+				$Output->write(WritingBuffer::create((new Compiler($Queue->getSourcePath()))->compile($Path))->process(function($content) use ($name, $params){
+					return '<?php function ' . $name .'($__data, $__global){ extract($__global);unset($__global);'
+						. 'extract($__data);unset($__data); ?>' . "\n" . $content . "\n<?php } ?>";
+				})->toReadingBuffer()->read());
+
+				$Items[RegExp::create('/\.sabre$/')->erase(basename($Path->toString()))] = $name;
+			}
+	}
+
+	$Output->process(function ($content) use ($condition, $Items, $params) {
+		$content .= "<?php switch (" . $condition . "){";
+
+		foreach ($Items as $name => $value) {
+			$content .= "case '" . $name . "': " . $value
+				. "(" . $params . ", Arr::only(get_defined_vars(), g())); break;";
+		};
+
+		return $content .= "} ?>";
+	});
+
+	return $Output->toReadingBuffer();
+}, 3, false));
 
 /** @noinspection PhpUnhandledExceptionInspection */
 Compiler::token(new SToken('param', function ($name, $value) {
