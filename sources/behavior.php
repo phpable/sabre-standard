@@ -160,10 +160,10 @@ Compiler::token(new SToken('list', function ($dirname, $condition, $params, Queu
 	$Output = new WritingBuffer();
 
 	foreach ((new Path($dirname))->prepend($Queue->getSourcePath())
-		->toDerectory()->filter('*.sabre') as $index => $Path){
-			$name = 'f_' . md5(implode([$index, $dirname, $condition, $params]));
-
+		->toDerectory()->filter('*.sabre') as $Path){
 			if (!$Path->isDot() && $Path->isFile()){
+				$name = 'f_' . md5(implode([time(), $Path->toString(), $params]));
+
 				$Output->write(WritingBuffer::create((new Compiler($Queue->getSourcePath()))->compile($Path))->process(function($content) use ($name, $params){
 					return '<?php function ' . $name .'($__data, $__global){ extract($__global);unset($__global);'
 						. 'extract($__data);unset($__data); ?>' . "\n" . $content . "\n<?php } ?>";
@@ -175,9 +175,8 @@ Compiler::token(new SToken('list', function ($dirname, $condition, $params, Queu
 
 	return $Output->process(function ($content) use ($condition, $Items, $params) {
 		return $content .= "<?php switch (" . $condition . "){" . Str::join("\n", Arr::each($Items, function($name, $value) use ($params){
-			return "case '" . $name . "': " . $value
-				. "(" . $params . ", Arr::only(get_defined_vars(), g())); break;" . "} ?>";
-		})); })->toReadingBuffer();
+			return "case '" . $name . "': " . $value . "(" . $params . ", Arr::only(get_defined_vars(), g())); break;";
+		})). "} ?>"; })->toReadingBuffer();
 }, 3, false));
 
 /** @noinspection PhpUnhandledExceptionInspection */
