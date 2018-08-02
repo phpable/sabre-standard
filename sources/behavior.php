@@ -177,8 +177,7 @@ Compiler::token(new SToken('list', function ($dirname, $condition, $params, Queu
 		return $content .= "<?php switch (" . $condition . "){" . Str::join("\n", Arr::each($Items, function($name, $value) use ($params){
 			return "case '" . $name . "': " . $value
 				. "(" . $params . ", Arr::only(get_defined_vars(), g())); break;" . "} ?>";
-		}));
-	})->toReadingBuffer();
+		})); })->toReadingBuffer();
 }, 3, false));
 
 /** @noinspection PhpUnhandledExceptionInspection */
