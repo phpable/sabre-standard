@@ -173,18 +173,12 @@ Compiler::token(new SToken('list', function ($dirname, $condition, $params, Queu
 			}
 	}
 
-	$Output->process(function ($content) use ($condition, $Items, $params) {
-		$content .= "<?php switch (" . $condition . "){";
-
-		foreach ($Items as $name => $value) {
-			$content .= "case '" . $name . "': " . $value
-				. "(" . $params . ", Arr::only(get_defined_vars(), g())); break;";
-		};
-
-		return $content .= "} ?>";
-	});
-
-	return $Output->toReadingBuffer();
+	return $Output->process(function ($content) use ($condition, $Items, $params) {
+		return $content .= "<?php switch (" . $condition . "){" . Str::join("\n", Arr::each($Items, function($name, $value) use ($params){
+			return "case '" . $name . "': " . $value
+				. "(" . $params . ", Arr::only(get_defined_vars(), g())); break;" . "} ?>";
+		}));
+	})->toReadingBuffer();
 }, 3, false));
 
 /** @noinspection PhpUnhandledExceptionInspection */
