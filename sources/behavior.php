@@ -169,7 +169,8 @@ Compiler::token(new SToken('list', function ($dirname, $condition, $params, Queu
 						. 'extract($__data);unset($__data); ?>' . "\n" . $content . "\n<?php } ?>";
 				})->toReadingBuffer()->read());
 
-				$Items[RegExp::create('/\.sabre$/')->erase(basename($Path->toString()))] = $name;
+				$Items[RegExp::create('/\.sabre$/')
+					->erase(basename($Path->toString()))] = $name;
 			}
 	}
 
