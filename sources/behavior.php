@@ -161,10 +161,11 @@ Compiler::token(new SToken('list', function ($dirname, $condition, $params, Queu
 
 	foreach ((new Path($dirname))->prepend($Queue->getSourcePath())
 		->toDerectory()->filter('*.sabre') as $Path){
+
 			if (!$Path->isDot() && $Path->isFile()){
 				$name = 'f_' . md5(implode([time(), $Path->toString(), $params]));
 
-				$Output->write(WritingBuffer::create((new Compiler($Queue->getSourcePath()))->compile($Path))->process(function($content) use ($name, $params){
+				$Output->write(WritingBuffer::create((new Compiler($Queue->getSourcePath()))->compile($Path))->process(function($content) use ($name){
 					return '<?php function ' . $name .'($__data, $__global){ extract($__global);unset($__global);'
 						. 'extract($__data);unset($__data); ?>' . "\n" . $content . "\n<?php } ?>";
 				})->toReadingBuffer()->read());
