@@ -9,7 +9,11 @@ use \Able\IO\Path;
 use \Able\Reglib\Reglib;
 use \Able\Reglib\Regexp;
 
+use \Able\Sabre\Structures\STrap;
+use \Able\Sabre\Structures\SToken;
+
 /**
+ * @method static \Able\Sabre\Compiler recipient()
  * @method static void prepend(File $File)
  * @method static void hook(string $token, callable $Handler)
  * @method static void trap(STrap $Signature)
@@ -57,17 +61,23 @@ class Compiler extends AFacade {
 			'sources'))->append('prepared.php')->toFile()->toReadingBuffer()->process(function ($value){
 				return (new Regexp('/\s*\\?>$/'))->erase(trim($value)) . "\n?>\n"; }));
 	}
-}
 
-try {
-	if (!file_exists($Path = (new Path(__DIR__))->getParent()->append('sources', 'behavior.php'))) {
-		throw new \Exception('Can not load behavior!');
+	/**
+	 * Initialize the standard compiler's behavior.
+	 * @throws \Exception
+	 */
+	public final static function initialize(): void {
+		try {
+			if (!file_exists($Path = (new Path(__DIR__))->getParent()->append('sources', 'behavior.php'))) {
+				throw new \Exception('Can not load behavior!');
+			}
+
+			include($Path->toString());
+		}catch (\Throwable $Exception){
+
+			/** @noinspection PhpUnhandledExceptionInspection */
+			throw new \ErrorException('Cannot load behavior: ' . $Exception->getMessage(), 0, 1,
+				$Exception->getFile(), $Exception->getLine(), $Exception);
+		}
 	}
-
-	include($Path->toString());
-}catch (\Throwable $Exception){
-
-	/** @noinspection PhpUnhandledExceptionInspection */
-	throw new \ErrorException('Cannot load behavior: ' . $Exception->getMessage(), 0, 1,
-		$Exception->getFile(), $Exception->getLine(), $Exception);
 }
