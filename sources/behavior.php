@@ -1,14 +1,12 @@
 <?php
 namespace Able\Sabre\Standard;
 
-use \Able\Sabre\Compiler;
+use \Able\Sabre\Standard\Compiler;
 
 use \Able\Sabre\Structures\SToken;
 use \Able\Sabre\Structures\SState;
 use \Able\Sabre\Structures\STrap;
-
 use \Able\Sabre\Utilities\Queue;
-use \Able\Sabre\Utilities\Task;
 
 use \Able\IO\File;
 use \Able\IO\Path;
@@ -70,9 +68,6 @@ function checkArraySyntax(string $input): bool {
 
 	return $count && !$size;
 }
-
-/** @noinspection PhpUnhandledExceptionInspection */
-//Compiler::prepend((new Path(__DIR__))->append('prepared.php')->toFile());
 
 /** @noinspection PhpUnhandledExceptionInspection */
 Compiler::hook('{{--', function(Queue $Queue, SState $SState){
@@ -140,7 +135,7 @@ Compiler::token(new SToken('involve', function ($filename, $params, Queue $Queue
 		throw new \Exception('The assigned parameter is not an array!');
 	}
 
-	($Buffer = new WritingBuffer())->write((new Compiler($Queue->getSourcePath()))
+	($Buffer = new WritingBuffer())->write(Compiler::recipient()
 		->compile(new Path(trim($filename, '\'"') . '.sabre')));
 
 	return $Buffer->process(function($content) use ($filename, $params){
@@ -165,7 +160,7 @@ Compiler::token(new SToken('list', function ($dirname, $condition, $params, Queu
 			if (!$Path->isDot() && $Path->isFile()){
 				$name = 'f_' . md5(implode([time(), $Path->toString(), $params]));
 
-				$Output->write(WritingBuffer::create((new Compiler($Queue->getSourcePath()))->compile($Path))->process(function($content) use ($name){
+				$Output->write(WritingBuffer::create(Compiler::recipient()->compile($Path))->process(function($content) use ($name){
 					return '<?php function ' . $name .'($__data, $__global){ extract($__global);unset($__global);'
 						. 'extract($__data);unset($__data); ?>' . "\n" . $content . "\n<?php } ?>";
 				})->toReadingBuffer()->read());
