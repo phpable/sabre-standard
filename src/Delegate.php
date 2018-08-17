@@ -9,11 +9,13 @@ use \Able\IO\Path;
 use \Able\Reglib\Reglib;
 use \Able\Reglib\Regexp;
 
+use Able\Sabre\Compiler;
 use \Able\Sabre\Structures\STrap;
 use \Able\Sabre\Structures\SToken;
 
 /**
  * @method static \Able\Sabre\Compiler recipient()
+ *
  * @method static void prepend(File $File)
  * @method static void hook(string $token, callable $Handler)
  * @method static void trap(STrap $Signature)
@@ -21,12 +23,12 @@ use \Able\Sabre\Structures\SToken;
  * @method static void extend(string $token, SToken $Signature)
  * @method static void finalize(string $token, SToken $Signature)
  */
-class Compiler extends AFacade {
+class Delegate extends AFacade {
 
 	/**
 	 * @var string
 	 */
-	protected static $Recipient = \Able\Sabre\Compiler::class;
+	protected static $Recipient = Compiler::class;
 
 	/**
 	 * @var Path
@@ -45,10 +47,24 @@ class Compiler extends AFacade {
 	}
 
 	/**
+	 * @var array
+	 */
+	private static $History = [];
+
+	/**
+	 * @return array
+	 */
+	public final static function history(){
+		return self::$History;
+	}
+
+	/**
 	 * @return array
 	 */
 	protected static final function provide(): array {
-		return [self::$Source];
+		return [self::$Source, function($filepath){
+			array_push(self::$History, $filepath);
+		}];
 	}
 
 	/**
@@ -56,10 +72,13 @@ class Compiler extends AFacade {
 	 * @return \Generator
 	 * @throws \Exception
 	 */
-	public static final function compile(Path $Path): \Generator{
-		return parent::compile($Path, (new Path(dirname(__DIR__),
-			'sources'))->append('prepared.php')->toFile()->toReadingBuffer()->process(function ($value){
-				return (new Regexp('/\s*\\?>$/'))->erase(trim($value)) . "\n?>\n"; }));
+	public static final function compile(Path $Path): \Generator {
+		self::$History = [];
+
+		yield from (new Path(dirname(__DIR__), 'sources', 'prepared.php'))->toFile()->toReadingBuffer()->process(function ($value){
+			return (new Regexp('/\s*\\?>$/'))->erase(trim($value)) . "\n?>\n"; })->read();
+
+		yield from parent::compile($Path);
 	}
 
 	/**
