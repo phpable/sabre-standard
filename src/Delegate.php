@@ -5,18 +5,16 @@ use \Able\Facades\AFacade;
 
 use \Able\IO\File;
 use \Able\IO\Path;
+use \Able\IO\Abstractions\IReader;
 
 use \Able\Reglib\Reglib;
 use \Able\Reglib\Regexp;
 
-use Able\Sabre\Compiler;
+use \Able\Sabre\Compiler;
 use \Able\Sabre\Structures\STrap;
 use \Able\Sabre\Structures\SToken;
 
 /**
- * @method static \Able\Sabre\Compiler recipient()
- *
- * @method static void prepend(File $File)
  * @method static void hook(string $token, callable $Handler)
  * @method static void trap(STrap $Signature)
  * @method static void token(SToken $Signature)
@@ -68,6 +66,20 @@ class Delegate extends AFacade {
 	}
 
 	/**
+	 * @var Files[]
+	 */
+	private static $Raw = [];
+
+	/**
+	 * @param File $File
+	 * @return void
+	 */
+	public final static function register(File $File): void {
+		array_push(self::$Raw, $File->toReadingBuffer()->process(function ($value){
+			return (new Regexp('/\s*\\?>$/'))->erase(trim($value)) . "\n?>\n"; }));
+	}
+
+	/**
 	 * @param Path $Path
 	 * @return \Generator
 	 * @throws \Exception
@@ -75,8 +87,9 @@ class Delegate extends AFacade {
 	public static final function compile(Path $Path): \Generator {
 		self::$History = [];
 
-		yield from (new Path(dirname(__DIR__), 'sources', 'prepared.php'))->toFile()->toReadingBuffer()->process(function ($value){
-			return (new Regexp('/\s*\\?>$/'))->erase(trim($value)) . "\n?>\n"; })->read();
+		foreach (self::$Raw as $Reader){
+			yield from $Reader->read();
+		}
 
 		yield from parent::compile($Path);
 	}
@@ -100,3 +113,6 @@ class Delegate extends AFacade {
 		}
 	}
 }
+
+/** @noinspection PhpUnhandledExceptionInspection */
+Delegate::register((new Path(dirname(__DIR__), 'sources', 'prepared.php'))->toFile());
