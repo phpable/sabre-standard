@@ -45,12 +45,12 @@ class Delegate extends AFacade {
 	}
 
 	/**
-	 * @var array
+	 * @var string[]
 	 */
 	private static $History = [];
 
 	/**
-	 * @return array
+	 * @return string[]
 	 */
 	public final static function history(){
 		return self::$History;
