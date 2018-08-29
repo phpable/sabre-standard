@@ -155,10 +155,9 @@ Delegate::token(new SToken('involve', function ($filename, $params, Queue $Queue
 	}
 
 	($Buffer = new WritingBuffer())->write($Compiler->compile(new Path(trim($filename, '\'"') . '.sabre')));
-
 	return $Buffer->process(function($content) use ($filename, $params){
-		return '<?php function ' . ($name = 'f_' . md5(implode([microtime(true), $filename, $params]))) .'($__data, $__global){ extract($__global);unset($__global);'
-			. 'extract($__data);unset($__data); ?>' . "\n" . $content . "\n<?php } " . $name . "(" . $params . ", Arr::only(get_defined_vars(), g())); ?>";
+		return '<?php if(!function_exists("' . ($name = 'f_' . md5(implode([microtime(true), $filename, $params]))) . '")){ function ' .  $name . '($__data, $__global){ '
+			. 'extract($__global);unset($__global);extract($__data);unset($__data); ?>' . "\n" . $content . "\n<?php }} " . $name . "(" . $params . ", Arr::only(get_defined_vars(), g())); ?>";
 	})->toReadingBuffer();
 }, 2, false, true));
 
