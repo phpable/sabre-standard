@@ -213,8 +213,8 @@ Delegate::token(new SToken('object', function ($name, $declaration) {
 		throw new \Exception('Invalid variable name!');
 	}
 	return '<?php if (!isset(' . $name . ')){ ' . $name . ' = new stdClass(); }' . ' foreach (json_decode(\''
-		. json_encode(parseObjectNotation($declaration)) . '\', true) as $name){' . 'if (!isset(' . $name . '->{$name}))'
-			. '{' . $name . '->{$name} = null; }}?>';
+		. json_encode(parseObjectNotation($declaration)) . '\', true) as $' . ($tmp = '_' . md5(implode([microtime(), $name]))) . '){'
+			. 'if (!isset(' . $name . '->{$' . $tmp .'})){' . $name . '->{$' . $tmp . '} = null; }}?>';
 }, 2, false));
 
 /** @noinspection PhpUnhandledExceptionInspection */
