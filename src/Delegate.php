@@ -100,7 +100,7 @@ class Delegate extends AFacade {
 	 */
 	public final static function initialize(): void {
 		try {
-			if (!file_exists($Path = (new Path(__DIR__))->getParent()->append('sources', 'behavior.php'))) {
+			if (!file_exists($Path = (new Path(__DIR__))->getParent()->append('includes', 'behavior.php'))) {
 				throw new \Exception('Can not load behavior!');
 			}
 
