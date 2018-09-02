@@ -80,8 +80,8 @@ function parseObjectNotation(string &$source): array {
 	return Arr::each(preg_split('/\s*,+\s*/', trim(substr(BracketsParser::parse($source,
 		BracketsParser::BT_CURLY), 1, -1))), function ($key, $value){
 
-		if (!preg_match('/' . Reglib::VAR . '/', $value)){
-			throw new \Exception('Invalid property name!');
+		if (!preg_match('/^' . Reglib::VAR . '$/', $value)){
+			throw new \Exception('Invalid property declaration!');
 		}
 
 		return $value;
@@ -210,8 +210,9 @@ Delegate::token(new SToken('param', function ($name, $value) {
 /** @noinspection PhpUnhandledExceptionInspection */
 Delegate::token(new SToken('object', function ($name, $declaration) {
 	if (!preg_match('/\$' . Reglib::VAR. '/', $name)){
-		throw new \Exception('Invalid variable name!');
+		throw new \Exception('Invalid object name!');
 	}
+
 	return '<?php if (!isset(' . $name . ')){ ' . $name . ' = new stdClass(); }' . ' foreach (json_decode(\''
 		. json_encode(parseObjectNotation($declaration)) . '\', true) as $' . ($tmp = '_' . md5(implode([microtime(), $name]))) . '){'
 			. 'if (!isset(' . $name . '->{$' . $tmp .'})){' . $name . '->{$' . $tmp . '} = null; }}?>';
