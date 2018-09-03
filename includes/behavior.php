@@ -156,8 +156,8 @@ Delegate::token(new SToken('involve', function ($filename, $params, Queue $Queue
 
 	($Buffer = new WritingBuffer())->write($Compiler->compile(new Path(trim($filename, '\'"') . '.sabre')));
 	return $Buffer->process(function($content) use ($filename, $params){
-		return '<?php if(!function_exists("' . ($name = 'f_' . md5(implode([microtime(true), $filename, $params]))) . '")){ function ' .  $name . '($__data, $__global){ '
-			. 'extract($__global);unset($__global);extract($__data);unset($__data); ?>' . "\n" . $content . "\n<?php }} " . $name . "(" . $params . ", Arr::only(get_defined_vars(), g())); ?>";
+		return '<?php if(!function_exists("' . ($name = 'f_' . md5(implode([microtime(true), $filename, $params]))) . '")){ function ' .  $name . '($__data){'
+			. 'extract($__data);unset($__data); ?>' . "\n" . $content . "\n<?php }} " . $name . "(" . $params . ", Arr::only(get_defined_vars())); ?>";
 	})->toReadingBuffer();
 }, 2, false, true));
 
@@ -178,7 +178,7 @@ Delegate::token(new SToken('list', function ($dirname, $condition, $params, Queu
 				$name = 'f_' . md5(implode([microtime(true), $Path->toString(), $params]));
 
 				$Output->write(WritingBuffer::create($Compiler->compile($Path))->process(function($content) use ($name){
-					return '<?php if(!function_exists("' . $name .'")){ function ' . $name . '($__data, $__global){ extract($__global);unset($__global);'
+					return '<?php if(!function_exists("' . $name .'")){ function ' . $name . '($__data){'
 						. 'extract($__data);unset($__data); ?>' . "\n" . $content . "\n<?php }} ?>";
 				})->toReadingBuffer()->read());
 
@@ -189,7 +189,7 @@ Delegate::token(new SToken('list', function ($dirname, $condition, $params, Queu
 
 	return $Output->process(function ($content) use ($condition, $Items, $params) {
 		return $content .= "<?php switch (" . $condition . "){" . Str::join("\n", Arr::each($Items, function($name, $value) use ($params){
-			return "case '" . $name . "': " . $value . "(" . $params . ", Arr::only(get_defined_vars(), g())); break;";
+			return "case '" . $name . "': " . $value . "(" . $params . ", Arr::only(get_defined_vars())); break;";
 		})). "} ?>"; })->toReadingBuffer();
 }, 3, false, true));
 
@@ -219,20 +219,6 @@ Delegate::token(new SToken('object', function ($name, $declaration) {
 }, 2, false));
 
 /** @noinspection PhpUnhandledExceptionInspection */
-Delegate::token(new SToken('global', function ($name, $value) {
-	if (!preg_match('/\$' . Reglib::VAR. '/', $name)){
-		throw new \Exception('Invalid variable name!');
-	}
-
-	if (!is_null($value) && !checkFragmentSyntax($value)){
-		throw new \Exception('Invalid syntax!');
-	}
-
-	return '<?php if (!isset(' . $name . ')){ ' . $name . ' = '
-		. (!is_null($value)? $value : 'null') . '; }; g("' . substr($name, 1) . '");?>';
-}, 2, false));
-
-/** @noinspection PhpUnhandledExceptionInspection */
 Delegate::token(new SToken('extends', function (string $name, Queue $Queue) {
 	$Queue->add((new Path(trim($name, '\'"') . '.sabre')));
 }, 1, false));
@@ -243,13 +229,13 @@ Delegate::token(new SToken('section', function (string $name, Queue $Queue) {
 		throw new \Exception('Invalid section name "' . $name. '"!');
 	}
 
-	return '<?php s("' . $name . '", function ($__data, $__global){'
-		. 'extract($__global);unset($__global);extract($__data);unset($__data);?>';
+	return '<?php s("' . $name . '", function ($__data){'
+		. 'extract($__data);unset($__data);?>';
 }, 1));
 
 /** @noinspection PhpUnhandledExceptionInspection */
 Delegate::finalize('section', new SToken('end', function () {
-	return '<?php }, f(get_defined_vars()), Arr::only(get_defined_vars(), g()));?>';
+	return '<?php }, f(get_defined_vars()), Arr::only(get_defined_vars()));?>';
 }));
 
 /** @noinspection PhpUnhandledExceptionInspection */

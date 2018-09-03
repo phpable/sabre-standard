@@ -14,5 +14,3 @@ function s($n){ static $s = []; if (func_num_args() < 2) { if (isset($s[$n])) { 
 echo $o; }}} else {if (!isset($s[$n])){ $s[$n] = []; } ob_start(); $l = ob_get_level(); call_user_func_array(func_get_arg(1),
 array_slice(func_get_args(), 2)); while(ob_get_level() > $l){ ob_get_clean(); } array_push($s[$n], ob_get_clean());}}
 
-function g(){ static $s = []; if (func_num_args() > 0){ array_push($s,
-strtolower(func_get_arg(0))); } return $s; }
