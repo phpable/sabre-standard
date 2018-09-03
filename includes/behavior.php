@@ -194,9 +194,22 @@ Delegate::token(new SToken('list', function ($dirname, $condition, $params, Queu
 }, 3, false, true));
 
 /** @noinspection PhpUnhandledExceptionInspection */
-Delegate::token(new SToken('param', function ($name, $value) {
+Delegate::token(new SToken('assign', function ($name, $value) {
 	if (!preg_match('/\$' . Reglib::VAR. '/', $name)){
 		throw new \Exception('Invalid variable name!');
+	}
+
+	if (!is_null($value) && !checkFragmentSyntax($value)){
+		throw new \Exception('Invalid syntax!');
+	}
+
+	return '<?php ' . $name . ' = ' . (!is_null($value)? $value : 'null') . '; ?>';
+}, 2, false));
+
+/** @noinspection PhpUnhandledExceptionInspection */
+Delegate::token(new SToken('param', function ($name, $value) {
+	if (!preg_match('/\$' . Reglib::VAR. '/', $name)){
+		throw new \Exception('Invalid parameter name!');
 	}
 
 	if (!is_null($value) && !checkFragmentSyntax($value)){
