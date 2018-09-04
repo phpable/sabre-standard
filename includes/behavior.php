@@ -207,9 +207,9 @@ Delegate::token(new SToken('assign', function ($name, $value) {
 }, 2, false));
 
 /** @noinspection PhpUnhandledExceptionInspection */
-Delegate::token(new SToken('param', function ($name, $value) {
+Delegate::token(new SToken('declare', function ($name, $value) {
 	if (!preg_match('/\$' . Reglib::VAR. '/', $name)){
-		throw new \Exception('Invalid parameter name!');
+		throw new \Exception('Invalid declaration name!');
 	}
 
 	if (!is_null($value) && !checkFragmentSyntax($value)){
@@ -234,7 +234,7 @@ Delegate::token(new SToken('object', function ($name, $declaration) {
 /** @noinspection PhpUnhandledExceptionInspection */
 Delegate::token(new SToken('export', function ($name) {
 	if (!preg_match('/\$' . Reglib::VAR. '/', $name)){
-		throw new \Exception('Invalid parameter name!');
+		throw new \Exception('Invalid entity name!');
 	}
 
 	return '<?php if (isset($__export) && isset($__export["' . ($name = substr($name, 1)) . '"])){ $'
