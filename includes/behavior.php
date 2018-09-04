@@ -156,8 +156,8 @@ Delegate::token(new SToken('involve', function ($filename, $params, Queue $Queue
 
 	($Buffer = new WritingBuffer())->write($Compiler->compile(new Path(trim($filename, '\'"') . '.sabre')));
 	return $Buffer->process(function($content) use ($filename, $params){
-		return '<?php if(!function_exists("' . ($name = 'f_' . md5(implode([microtime(true), $filename, $params]))) . '")){ function ' .  $name . '($__data){'
-			. 'extract($__data);unset($__data); ?>' . "\n" . $content . "\n<?php }} " . $name . "(" . $params . ", Arr::only(get_defined_vars())); ?>";
+		return '<?php if(!function_exists("' . ($name = 'f_' . md5(implode([microtime(true), $filename, $params]))) . '")){ function ' .  $name . '($__data,$__export){'
+			. 'extract($__data);unset($__data); ?>' . "\n" . $content . "\n<?php }} " . $name . "(" . $params . ", c(get_defined_vars())); ?>";
 	})->toReadingBuffer();
 }, 2, false, true));
 
@@ -178,7 +178,7 @@ Delegate::token(new SToken('list', function ($dirname, $condition, $params, Queu
 				$name = 'f_' . md5(implode([microtime(true), $Path->toString(), $params]));
 
 				$Output->write(WritingBuffer::create($Compiler->compile($Path))->process(function($content) use ($name){
-					return '<?php if(!function_exists("' . $name .'")){ function ' . $name . '($__data){'
+					return '<?php if(!function_exists("' . $name .'")){ function ' . $name . '($__data,$__export){'
 						. 'extract($__data);unset($__data); ?>' . "\n" . $content . "\n<?php }} ?>";
 				})->toReadingBuffer()->read());
 
@@ -189,7 +189,7 @@ Delegate::token(new SToken('list', function ($dirname, $condition, $params, Queu
 
 	return $Output->process(function ($content) use ($condition, $Items, $params) {
 		return $content .= "<?php switch (" . $condition . "){" . Str::join("\n", Arr::each($Items, function($name, $value) use ($params){
-			return "case '" . $name . "': " . $value . "(" . $params . ", Arr::only(get_defined_vars())); break;";
+			return "case '" . $name . "': " . $value . "(" . $params . ", c(get_defined_vars())); break;";
 		})). "} ?>"; })->toReadingBuffer();
 }, 3, false, true));
 
@@ -232,6 +232,16 @@ Delegate::token(new SToken('object', function ($name, $declaration) {
 }, 2, false));
 
 /** @noinspection PhpUnhandledExceptionInspection */
+Delegate::token(new SToken('export', function ($name) {
+	if (!preg_match('/\$' . Reglib::VAR. '/', $name)){
+		throw new \Exception('Invalid parameter name!');
+	}
+
+	return '<?php if (isset($__export) && isset($__export["' . ($name = substr($name, 1)) . '"])){ $'
+		. $name . ' = $__export["' .  $name . '"]; }?>';
+}, 1, false));
+
+/** @noinspection PhpUnhandledExceptionInspection */
 Delegate::token(new SToken('extends', function (string $name, Queue $Queue) {
 	$Queue->add((new Path(trim($name, '\'"') . '.sabre')));
 }, 1, false));
@@ -248,7 +258,7 @@ Delegate::token(new SToken('section', function (string $name, Queue $Queue) {
 
 /** @noinspection PhpUnhandledExceptionInspection */
 Delegate::finalize('section', new SToken('end', function () {
-	return '<?php }, f(get_defined_vars()), Arr::only(get_defined_vars()));?>';
+	return '<?php }, f(get_defined_vars()));?>';
 }));
 
 /** @noinspection PhpUnhandledExceptionInspection */
