@@ -122,4 +122,4 @@ class Delegate extends AFacade {
 }
 
 /** @noinspection PhpUnhandledExceptionInspection */
-Delegate::register((new Path(dirname(__DIR__), 'includes', 'prepared2.php'))->toFile());
+Delegate::register((new Path(dirname(__DIR__), 'includes', 'prepared.php'))->toFile());
