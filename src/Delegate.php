@@ -87,11 +87,18 @@ class Delegate extends AFacade {
 	public static final function compile(Path $Path): \Generator {
 		self::$History = [];
 
+		yield '<?php function main_' . ($name = md5($Path->toString()))
+			. '($__obj, $__data){ extract($__data); unset($__data); ?>';
+
+		yield from parent::compile($Path);
+
+		yield '<?php }?>';
+
 		foreach (self::$Raw as $Reader){
 			yield from $Reader->read();
 		}
 
-		yield from parent::compile($Path);
+		yield '<?php main_' . $name . '(__init(), $__data ?? []);?>';
 	}
 
 	/**
@@ -115,4 +122,4 @@ class Delegate extends AFacade {
 }
 
 /** @noinspection PhpUnhandledExceptionInspection */
-Delegate::register((new Path(dirname(__DIR__), 'includes', 'prepared.php'))->toFile());
+Delegate::register((new Path(dirname(__DIR__), 'includes', 'prepared2.php'))->toFile());
