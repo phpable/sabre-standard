@@ -14,6 +14,7 @@
 	"require": {
 		"php": ">=7.2.0",
 		"able/io": "dev-master",
+		"able/facades": "dev-master",
 		"able/sabre": "dev-master"
 	},
 	"autoload": {
