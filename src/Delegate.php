@@ -87,18 +87,18 @@ class Delegate extends AFacade {
 	public static final function compile(Path $Path): \Generator {
 		self::$History = [];
 
-		yield '<?php function main_' . ($name = md5($Path->toString()))
-			. '($__obj, $__data){ extract($__data); unset($__data); ?>';
+		yield '<?php if (!function_exists("' . ($name = 'main_' . md5($Path->toString()))
+			. '")){ function ' . $name . '($__obj, $__data){ extract($__data); unset($__data); ?>';
 
 		yield from parent::compile($Path);
 
-		yield '<?php }?>';
+		yield '<?php }}?>';
 
 		foreach (self::$Raw as $Reader){
 			yield from $Reader->read();
 		}
 
-		yield '<?php main_' . $name . '(__init(), $__data ?? []);?>';
+		yield '<?php ' . $name . '(__init(), $__data ?? []);?>';
 	}
 
 	/**
