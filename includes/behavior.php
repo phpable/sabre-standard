@@ -172,7 +172,7 @@ Delegate::token(new SToken('list', function ($dirname, $condition, $params, Queu
 	$Output = new WritingBuffer();
 
 	foreach ((new Path($dirname))->prepend($Queue->getSourcePath())
-		->toDerectory()->filter('*.sabre') as $Path){
+		->toDirectory()->filter('*.sabre') as $Path){
 
 			if (!$Path->isDot() && $Path->isFile()){
 				$name = 'f_' . md5(implode([microtime(true), $Path->toString(), $params]));
