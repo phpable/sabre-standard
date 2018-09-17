@@ -5,6 +5,7 @@ use \Able\Facades\AFacade;
 
 use \Able\IO\File;
 use \Able\IO\Path;
+use \Able\IO\Reader;
 use \Able\IO\Abstractions\IReader;
 
 use \Able\Reglib\Reglib;
@@ -45,6 +46,14 @@ class Delegate extends AFacade {
 	}
 
 	/**
+	 * @return Path
+	 * @throws \Exception
+	 */
+	protected final static function getSoursePath(): Path {
+		return self::$Source->toPath();
+	}
+
+	/**
 	 * @var string[]
 	 */
 	private static $History = [];
@@ -60,7 +69,7 @@ class Delegate extends AFacade {
 	 * @return array
 	 */
 	protected static final function provide(): array {
-		return [self::$Source, function($filepath){
+		return [function($filepath){
 			array_push(self::$History, $filepath);
 		}];
 	}
@@ -80,17 +89,17 @@ class Delegate extends AFacade {
 	}
 
 	/**
-	 * @param Path $Path
+	 * @param Reader $Reader
 	 * @return \Generator
 	 * @throws \Exception
 	 */
-	public static final function compile(Path $Path): \Generator {
+	public static final function compile(Reader $Reader): \Generator {
 		self::$History = [];
 
-		yield '<?php if (!function_exists("' . ($name = 'main_' . md5($Path->toString()))
+		yield '<?php if (!function_exists("' . ($name = 'main_' . md5($Reader->getLocation()))
 			. '")){ function ' . $name . '($__obj, $__data){ extract($__data); unset($__data); ?>';
 
-		yield from parent::compile($Path);
+		yield from parent::compile($Reader);
 
 		yield '<?php }}?>';
 
