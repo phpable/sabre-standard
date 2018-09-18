@@ -5,7 +5,6 @@ use \Able\Facades\AFacade;
 
 use \Able\IO\File;
 use \Able\IO\Path;
-use \Able\IO\Reader;
 use \Able\IO\Abstractions\IReader;
 
 use \Able\Reglib\Reglib;
@@ -89,11 +88,11 @@ class Delegate extends AFacade {
 	}
 
 	/**
-	 * @param Reader $Reader
+	 * @param IReader $Reader
 	 * @return \Generator
 	 * @throws \Exception
 	 */
-	public static final function compile(Reader $Reader): \Generator {
+	public static final function compile(IReader $Reader): \Generator {
 		self::$History = [];
 
 		yield '<?php if (!function_exists("' . ($name = 'main_' . md5($Reader->getLocation()))
