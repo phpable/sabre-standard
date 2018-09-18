@@ -14,6 +14,8 @@ use \Able\Sabre\Compiler;
 use \Able\Sabre\Structures\STrap;
 use \Able\Sabre\Structures\SToken;
 
+use \Able\Helpers\Str;
+
 /**
  * @method static void hook(string $token, callable $Handler)
  * @method static void trap(STrap $Signature)
@@ -95,7 +97,7 @@ class Delegate extends AFacade {
 	public static final function compile(IReader $Reader): \Generator {
 		self::$History = [];
 
-		yield '<?php if (!function_exists("' . ($name = 'main_' . md5($Reader->getLocation()))
+		yield '<?php if (!function_exists("' . ($name = 'main_' . md5(Str::join('|', microtime(true), __CLASS__, __METHOD__)))
 			. '")){ function ' . $name . '($__obj, $__data){ extract($__data); unset($__data); ?>';
 
 		yield from parent::compile($Reader);
