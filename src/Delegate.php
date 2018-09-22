@@ -114,7 +114,7 @@ class Delegate extends AFacade {
 	public static final function compile(IReader $Reader,  int $mode = 0b0000): \Generator {
 		self::$History = [];
 
-		$name = $mode & self::CO_CUSTOM_NAME ? Arr::value(func_get_args(), 2)
+		$name = $mode & self::CO_CUSTOM_NAME && func_num_args() > 2 ? Arr::value(func_get_args(), 2)
 			: 'main_' . md5(Str::join('|', microtime(true), __CLASS__, __METHOD__));
 
 		yield '<?php if (!function_exists("' . $name
