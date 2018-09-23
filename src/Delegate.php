@@ -85,7 +85,7 @@ class Delegate extends AFacade {
 	 * @param File $File
 	 * @return void
 	 */
-	public final static function register(File $File): void {
+	public final static function prepend(File $File): void {
 		array_push(self::$Raw, $File->toReadingBuffer()->process(function ($value){
 			return (new Regexp('/\s*\\?>$/'))->erase(trim($value)) . "\n?>\n"; }));
 	}
@@ -101,21 +101,17 @@ class Delegate extends AFacade {
 	public const CO_SKIP_CALL = 0b0010;
 
 	/**
-	 * @const int
-	 */
-	public const CO_CUSTOM_NAME = 0b0100;
-
-	/**
 	 * @param IReader $Reader
 	 * @param int $mode
+	 * @param string $name
 	 * @return \Generator
 	 * @throws \Exception
 	 */
-	public static final function compile(IReader $Reader,  int $mode = 0b0000): \Generator {
+	public static final function compile(IReader $Reader,  string $name = null, int $mode = 0b0000): \Generator {
 		self::$History = [];
 
-		$name = $mode & self::CO_CUSTOM_NAME && func_num_args() > 2 ? Arr::value(func_get_args(), 2)
-			: 'main_' . md5(Str::join('|', microtime(true), __CLASS__, __METHOD__));
+		$name = $name ?? 'main_' . md5(Str::join('|', microtime(true),
+			__CLASS__, __METHOD__, $Reader->getLocation()));
 
 		yield '<?php if (!function_exists("' . $name
 			. '")){ function ' . $name . '($__obj, $__data){ extract($__data); unset($__data); ?>';
@@ -123,7 +119,6 @@ class Delegate extends AFacade {
 		yield from parent::compile($Reader);
 
 		yield '<?php }}?>';
-
 		if (~$mode & self::CO_SKIP_CALL) {
 			yield '<?php ' . $name . '(__init(), $__data ?? []);?>';
 		}
@@ -156,4 +151,4 @@ class Delegate extends AFacade {
 }
 
 /** @noinspection PhpUnhandledExceptionInspection */
-Delegate::register((new Path(dirname(__DIR__), 'includes', 'prepared.php'))->toFile());
+Delegate::prepend((new Path(dirname(__DIR__), 'includes', 'prepared.php'))->toFile());
