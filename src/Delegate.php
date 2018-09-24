@@ -119,14 +119,15 @@ class Delegate extends AFacade {
 		yield from parent::compile($Reader);
 
 		yield '<?php }}?>';
-		if (~$mode & self::CO_SKIP_CALL) {
-			yield '<?php ' . $name . '(__init(), $__data ?? []);?>';
-		}
 
 		if (~$mode & self::CO_SKIP_RAW) {
 			foreach (self::$Raw as $Reader) {
 				yield from $Reader->read();
 			}
+		}
+
+		if (~$mode & self::CO_SKIP_CALL) {
+			yield '<?php ' . $name . '(__init(), $__data ?? []);?>';
 		}
 	}
 
