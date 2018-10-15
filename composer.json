@@ -15,7 +15,7 @@
 		"able/io": "dev-master",
 		"able/sabre": "dev-master",
 		"able/minify": "dev-master",
-		"able/facades": "1.0.*"
+		"able/facades": "dev-master"
 	},
 	"autoload": {
 		"psr-4": {
