@@ -2,7 +2,7 @@
 if (!function_exists('__init')){
 function __init(){ return new class {
 public function o($v){ return is_object($v) && method_exists($v, '__toString')
-? $v->toString() : strval($v); }
+? $v->__toString() : strval($v); }
 
 public function c($e){ return array_merge(isset($e['__export']) ? $e['__export']
 : [], $this->f($e));}
