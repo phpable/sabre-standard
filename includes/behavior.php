@@ -195,7 +195,7 @@ Delegate::token(new SToken('list', function ($dirname, $condition, $params, Queu
 }, 3, false, true));
 
 /** @noinspection PhpUnhandledExceptionInspection */
-Delegate::token(new SToken('assign', function ($name, $value) {
+Delegate::token(new SToken('set', function ($name, $value) {
 	if (!preg_match('/\$' . Reglib::VAR. '/', $name)){
 		throw new \Exception('Invalid variable name!');
 	}
