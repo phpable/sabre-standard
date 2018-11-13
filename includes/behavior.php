@@ -195,19 +195,6 @@ Delegate::token(new SToken('list', function ($dirname, $condition, $params, Queu
 }, 3, false, true));
 
 /** @noinspection PhpUnhandledExceptionInspection */
-Delegate::token(new SToken('set', function ($name, $value) {
-	if (!preg_match('/\$' . Reglib::VAR. '/', $name)){
-		throw new \Exception('Invalid variable name!');
-	}
-
-	if (!is_null($value) && !checkFragmentSyntax($value)){
-		throw new \Exception('Invalid syntax!');
-	}
-
-	return '<?php ' . $name . ' = ' . (!is_null($value)? $value : 'null') . '; ?>';
-}, 2, false));
-
-/** @noinspection PhpUnhandledExceptionInspection */
 Delegate::token(new SToken('declare', function ($name, $value) {
 	if (!preg_match('/\$' . Reglib::VAR. '/', $name)){
 		throw new \Exception('Invalid declaration name!');
@@ -236,6 +223,19 @@ Delegate::token(new SToken('export', function ($name) {
 	return '<?php if (isset($__export) && isset($__export["' . ($name = substr($name, 1)) . '"])){ $'
 		. $name . ' = $__export["' .  $name . '"]; }?>';
 }, 1, false));
+
+/** @noinspection PhpUnhandledExceptionInspection */
+Delegate::token(new SToken('set', function ($name, $value) {
+	if (!preg_match('/\$' . Reglib::VAR. '/', $name)){
+		throw new \Exception('Invalid variable name!');
+	}
+
+	if (!is_null($value) && !checkFragmentSyntax($value)){
+		throw new \Exception('Invalid syntax!');
+	}
+
+	return '<?php ' . $name . ' = ' . (!is_null($value)? $value : 'null') . '; ?>';
+}, 2, false));
 
 /** @noinspection PhpUnhandledExceptionInspection */
 Delegate::token(new SToken('extends', function (string $name, Queue $Queue) {
