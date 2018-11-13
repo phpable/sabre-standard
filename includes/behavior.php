@@ -5,9 +5,9 @@ use \Able\Sabre\Compiler;
 use \Able\Sabre\Standard\Delegate;
 use \Able\Sabre\Parsers\BracketsParser;
 
-use \Able\Sabre\Structures\SToken;
+use \Able\Sabre\Structures\SCommand;
 use \Able\Sabre\Structures\SState;
-use \Able\Sabre\Structures\STrap;
+use \Able\Sabre\Structures\SInjection;
 use \Able\Sabre\Utilities\Queue;
 
 use \Able\IO\File;
@@ -87,63 +87,59 @@ function parseObjectNotation(string &$source): array {
 	});
 }
 
-/** @noinspection PhpUnhandledExceptionInspection */
-Delegate::switch('{{--', function(Queue $Queue, SState $SState){
-	$SState->ignore = true;
+Delegate::directive('{{--', function(Queue $Queue, SState $State){
+	$State->ignore = true;
+});
+
+Delegate::directive('--}}', function(Queue $Queue, SState $State){
+	$State->ignore = false;
+});
+
+Delegate::directive('{{##', function(Queue $Queue, SState $State){
+	$State->verbatim = true;
+});
+
+Delegate::directive('##}}', function(Queue $Queue, SState $State){
+	$State->verbatim = false;
 });
 
 /** @noinspection PhpUnhandledExceptionInspection */
-Delegate::switch('--}}', function(Queue $Queue, SState $SState){
-	$SState->ignore = false;
-});
-
-/** @noinspection PhpUnhandledExceptionInspection */
-Delegate::switch('{{##', function(Queue $Queue, SState $SState){
-	$SState->verbatim = true;
-});
-
-/** @noinspection PhpUnhandledExceptionInspection */
-Delegate::switch('##}}', function(Queue $Queue, SState $SState){
-	$SState->verbatim = false;
-});
-
-/** @noinspection PhpUnhandledExceptionInspection */
-Delegate::trap(new STrap('{{', '}}', function(string $condition){
+Delegate::injection(new SInjection('{{', '}}', function(string $condition){
 	return '<?=$__obj->h(' . trim($condition) . ');?>';
 }));
 
 /** @noinspection PhpUnhandledExceptionInspection */
-Delegate::trap(new STrap('{!!', '!!}', function(string $condition){
+Delegate::injection(new SInjection('{!!', '!!}', function(string $condition){
 	return '<?=$__obj->o(' . trim($condition) . ');?>';
 }));
 
 /** @noinspection PhpUnhandledExceptionInspection */
-Delegate::token(new SToken('if', function (string $condition) {
+Delegate::command(new SCommand('if', function (string $condition) {
 	return '<?php if (' . $condition . '){?>';
 }, 1));
 
 /** @noinspection PhpUnhandledExceptionInspection */
-Delegate::extend('if', new SToken('elseif', function (string $condition) {
+Delegate::extend('if', new SCommand('elseif', function (string $condition) {
 	return '<?php } elseif (' . $condition . ') {?>';
 }, 1));
 
 /** @noinspection PhpUnhandledExceptionInspection */
-Delegate::extend('if', new SToken('else', function () {
+Delegate::extend('if', new SCommand('else', function () {
 	return '<?php } else {?>';
 }));
 
 /** @noinspection PhpUnhandledExceptionInspection */
-Delegate::token(new SToken('for', function (string $condition) {
+Delegate::command(new SCommand('for', function (string $condition) {
 	return '<?php for (' . $condition . '){?>';
 }, 1));
 
 /** @noinspection PhpUnhandledExceptionInspection */
-Delegate::token(new SToken('foreach', function (string $condition) {
+Delegate::command(new SCommand('foreach', function (string $condition) {
 	return '<?php foreach (' . $condition . '){ ?>';
 }, 1));
 
 /** @noinspection PhpUnhandledExceptionInspection */
-Delegate::token(new SToken('declare', function ($name, $value) {
+Delegate::command(new SCommand('declare', function ($name, $value) {
 	if (!preg_match('/\$[A-Za-z][A-Za-z0-9_]/', $name)){
 		throw new \Exception(sprintf("Invalid variable name: %s!", $name));
 	}
@@ -163,7 +159,7 @@ Delegate::token(new SToken('declare', function ($name, $value) {
 }, 2, false));
 
 /** @noinspection PhpUnhandledExceptionInspection */
-Delegate::token(new SToken('set', function ($name, $value) {
+Delegate::command(new SCommand('set', function ($name, $value) {
 	if (!preg_match('/\$[A-Za-z][A-Za-z0-9_]/', $name)){
 		throw new \Exception(sprintf("Invalid variable name: %s!", $name));
 	}
@@ -176,13 +172,13 @@ Delegate::token(new SToken('set', function ($name, $value) {
 }, 2, false));
 
 /** @noinspection PhpUnhandledExceptionInspection */
-Delegate::token(new SToken('include', function (string $filename, Queue $Queue) {
+Delegate::command(new SCommand('include', function (string $filename, Queue $Queue) {
 	$Queue->immediately(Delegate::findSoursePath($filename)->append($filename
 		. '.sabre')->toFile()->toReader());
 }, 1, false));
 
 /** @noinspection PhpUnhandledExceptionInspection */
-Delegate::token(new SToken('involve', function ($filename, $params, Queue $Queue, Compiler $Compiler) {
+Delegate::command(new SCommand('involve', function ($filename, $params, Queue $Queue, Compiler $Compiler) {
 	if (!checkArraySyntax($params = preg_replace('/\s*,\s*/', ',', !is_null($params) ? $params : '[]'))){
 		throw new \Exception('The assigned parameter нis not an array!');
 	}
@@ -198,7 +194,7 @@ Delegate::token(new SToken('involve', function ($filename, $params, Queue $Queue
 
 
 /** @noinspection PhpUnhandledExceptionInspection */
-Delegate::token(new SToken('list', function ($dirname, $condition, $params, Queue $Queue, Compiler $Compiler) {
+Delegate::command(new SCommand('list', function ($dirname, $condition, $params, Queue $Queue, Compiler $Compiler) {
 	if (!checkArraySyntax($params = preg_replace('/\s*,\s*/', ',', !is_null($params) ? $params : '[]'))){
 		throw new \Exception('The assigned parameter is not an array!');
 	}
@@ -229,12 +225,12 @@ Delegate::token(new SToken('list', function ($dirname, $condition, $params, Queu
 }, 3, false, true));
 
 /** @noinspection PhpUnhandledExceptionInspection */
-Delegate::token(new SToken('extends', function (string $name, Queue $Queue) {
+Delegate::command(new SCommand('extends', function (string $name, Queue $Queue) {
 	$Queue->add(Delegate::findSoursePath($name)->append($name . '.sabre')->toFile()->toReader());
 }, 1, false));
 
 /** @noinspection PhpUnhandledExceptionInspection */
-Delegate::token(new SToken('section', function (string $name, Queue $Queue) {
+Delegate::command(new SCommand('section', function (string $name, Queue $Queue) {
 	if (!preg_match('/^' . Regex::RE_VARIABLE . '$/', $name = trim($name, '\'"'))){
 		throw new \Exception('Invalid section name "' . $name. '"!');
 	}
@@ -244,11 +240,11 @@ Delegate::token(new SToken('section', function (string $name, Queue $Queue) {
 }, 1));
 
 /** @noinspection PhpUnhandledExceptionInspection */
-Delegate::finalize('section', new SToken('end', function () {
+Delegate::finalize('section', new SCommand('end', function () {
 	return '<?php }, $__obj->f(get_defined_vars()), $__obj);?>';
 }));
 
 /** @noinspection PhpUnhandledExceptionInspection */
-Delegate::token(new SToken('yield', function (string $name, Queue $Queue) {
+Delegate::command(new SCommand('yield', function (string $name, Queue $Queue) {
 	return '<?php $__obj->c("' . $name . '"); ?>';
 }, 1, false));
