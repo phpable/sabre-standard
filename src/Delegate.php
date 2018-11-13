@@ -11,20 +11,22 @@ use \Able\IO\Abstractions\IReader;
 use \Able\Reglib\Regex;
 
 use \Able\Sabre\Compiler;
-use \Able\Sabre\Structures\STrap;
-use \Able\Sabre\Structures\SToken;
+use \Able\Sabre\Structures\SInjection;
+use \Able\Sabre\Structures\SCommand;
 
 use \Able\Helpers\Str;
 use \Able\Helpers\Arr;
 
 use \Able\Minify\Php;
 
+use \Exception;
+
 /**
- * @method static void switch(string $token, callable $Handler)
- * @method static void trap(STrap $Signature)
- * @method static void token(SToken $Signature)
- * @method static void extend(string $token, SToken $Signature)
- * @method static void finalize(string $token, SToken $Signature)
+ * @method static void directive(string $token, callable $Handler)
+ * @method static void injection(SInjection $Signature)
+ * @method static void command(SCommand $Signature)
+ * @method static void extend(string $token, SCommand $Signature)
+ * @method static void finalize(string $token, SCommand $Signature)
  */
 class Delegate extends AFacade {
 
@@ -46,7 +48,7 @@ class Delegate extends AFacade {
 	/**
 	 * @param Path $Source
 	 * @param string $namespace
-	 * @throws \Exception
+	 * @throws Exception
 	 */
 	public final static function registerSourcePath(Path $Source,
 		string $namespace = self::DEFAULT_NAMESPACE): void {
@@ -70,7 +72,7 @@ class Delegate extends AFacade {
 	/**
 	 * @param string $filename
 	 * @return Path
-	 * @throws \Exception
+	 * @throws Exception
 	 */
 	public final static function findSoursePath(string &$filename): Path {
 		if (!isset(self::$Sources[$namespace = Regex::create('/^([^:]+):/')
@@ -88,7 +90,7 @@ class Delegate extends AFacade {
 
 	/**
 	 * Initialize the standard compiler's behavior.
-	 * @throws \Exception
+	 * @throws Exception
 	 */
 	protected final static function initialize(): SInit {
 		return new SInit([], function(){
@@ -100,7 +102,6 @@ class Delegate extends AFacade {
 				include($Path->toString());
 			}catch (\Throwable $Exception){
 
-				/** @noinspection PhpUnhandledExceptionInspection */
 				throw new \ErrorException('Cannot load behavior: ' . $Exception->getMessage(), 0, 1,
 					$Exception->getFile(), $Exception->getLine(), $Exception);
 			}
