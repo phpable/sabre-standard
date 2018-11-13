@@ -213,23 +213,18 @@ Delegate::token(new SToken('declare', function ($name, $value) {
 		throw new \Exception('Invalid declaration name!');
 	}
 
+	if (preg_match('/^\{[A-Za-z0-9_,\s]+\}$/', $value)){
+		return '<?php if (!isset(' . $name . ')){ ' . $name . ' = new stdClass(); }' . ' foreach (json_decode(\''
+			. json_encode(parseObjectNotation($value)) . '\', true) as $' . ($tmp = '_' . md5(implode([microtime(), $name]))) . '){'
+				. 'if (!isset(' . $name . '->{$' . $tmp .'})){' . $name . '->{$' . $tmp . '} = null; }}?>';
+	}
+
 	if (!is_null($value) && !checkFragmentSyntax($value)){
 		throw new \Exception('Invalid syntax!');
 	}
 
 	return '<?php if (!isset(' . $name . ')){ ' . $name . ' = '
 		. (!is_null($value)? $value : 'null') . '; }?>';
-}, 2, false));
-
-/** @noinspection PhpUnhandledExceptionInspection */
-Delegate::token(new SToken('object', function ($name, $declaration) {
-	if (!preg_match('/\$' . Reglib::VAR. '/', $name)){
-		throw new \Exception('Invalid object name!');
-	}
-
-	return '<?php if (!isset(' . $name . ')){ ' . $name . ' = new stdClass(); }' . ' foreach (json_decode(\''
-		. json_encode(parseObjectNotation($declaration)) . '\', true) as $' . ($tmp = '_' . md5(implode([microtime(), $name]))) . '){'
-			. 'if (!isset(' . $name . '->{$' . $tmp .'})){' . $name . '->{$' . $tmp . '} = null; }}?>';
 }, 2, false));
 
 /** @noinspection PhpUnhandledExceptionInspection */
