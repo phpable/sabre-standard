@@ -235,16 +235,16 @@ Delegate::command(new SCommand('section', function (string $name, Queue $Queue) 
 		throw new \Exception('Invalid section name "' . $name. '"!');
 	}
 
-	return '<?php $__obj->c("' . $name . '", function ($__data, $__obj){'
-		. 'extract($__data);unset($__data);?>';
+	return '<?php $__obj->c("' . $name . '", function ($__export, $__obj){'
+		. 'extract($__export);unset($__export);?>';
 }, 1));
 
 /** @noinspection PhpUnhandledExceptionInspection */
 Delegate::finalize('section', new SCommand('end', function () {
-	return '<?php }, $__obj->f(get_defined_vars()), $__obj);?>';
+	return '<?php });?>';
 }));
 
 /** @noinspection PhpUnhandledExceptionInspection */
 Delegate::command(new SCommand('yield', function (string $name, Queue $Queue) {
-	return '<?php $__obj->c("' . $name . '"); ?>';
+	return '<?php $__obj->c("' . $name . '", $__obj->f(get_defined_vars()), $__obj); ?>';
 }, 1, false));

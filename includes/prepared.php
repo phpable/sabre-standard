@@ -32,7 +32,7 @@ return new class {
 	public function f($value) {
 		return is_array($value) ? (array_filter($value, function ($key) {
 			return !in_array($key, ['GLOBALS', '_POST', '_GET', '_REQUEST', '_FILES',
-				'_SESSION', '_SERVER', '_ENV', '_COOKIE']);
+				'_SESSION', '_SERVER', '_ENV', '_COOKIE', '__obj']);
 		}, ARRAY_FILTER_USE_KEY)) : [];
 	}
 
@@ -41,34 +41,22 @@ return new class {
 	 * or prints previously collected fragments if the second argument isn't specified.
 	 *
 	 * @param string $name
-	 * @param callable handler
+	 * @param mixed handler
 	 * @return void
 	 */
 	public function c($name,  $handler = null): void {
 		static $Cache = [];
 
-		if (is_null($handler)) {
-			if (isset($Cache[$name])) {
-				foreach ($Cache[$name] as $o) {
-					echo $o;
-				}
-
-				unset($Cache[$name]);
-			}
-		} else {
-			ob_start();
-			$level = ob_get_level();
-
-			call_user_func($handler, ...array_slice(func_get_args(), 2));
-			while (ob_get_level() > $level) {
-				ob_get_clean();
-			}
-
-			if (!isset($Cache[$name])) {
+		if (is_callable($handler)) {
+			if (!isset($Cache[$name])){
 				$Cache[$name] = [];
 			}
 
-			array_push($Cache[$name], ob_get_clean());
+			$Cache[$name][] = $handler;
+		} else {
+			while(!empty($Cache[$name])) {
+				call_user_func(array_pop($Cache[$name]), ...array_slice(func_get_args(), 1));
+			}
 		}
 	}
 };
