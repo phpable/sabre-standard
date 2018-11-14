@@ -187,8 +187,8 @@ Delegate::command(new SCommand('involve', function ($filename, $params, Queue $Q
 		. '.sabre')->toFile()->toReader()));
 
 	return $Buffer->process(function($content) use ($filename, $params){
-		return '<?php if(!function_exists("' . ($name = 'f_' . md5(implode([microtime(true), $filename, $params]))) . '")){ function ' .  $name . '($__data,$__export,$__obj){'
-			. 'extract($__export);unset($__export);extract($__data);unset($__data); ?>' . "\n" . $content . "\n<?php }} " . $name . "(" . $params . ', $__obj->f(get_defined_vars()), $__obj); ?>';
+		return '<?php if(!function_exists("' . ($name = 'f_' . md5(implode([microtime(true), $filename, $params]))) . '")){ function ' .  $name . '($__data,$__obj){'
+			. 'extract($__data);unset($__data); ?>' . "\n" . $content . "\n<?php }} " . $name . "(" . $params . ', $__obj); ?>';
 	})->toReadingBuffer();
 }, 2, false, true));
 
