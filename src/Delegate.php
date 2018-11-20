@@ -32,27 +32,56 @@ class Delegate extends AFacade {
 	protected static $Recipient = Compiler::class;
 
 	/**
-	 * @var Path
+	 * @const string
 	 */
-	private static $Source = null;
+	private const DEFAULT_NAMESPACE = '*';
+
+	/**
+	 * @var Path[]
+	 */
+	private static $Sources = [];
 
 	/**
 	 * @param Path $Source
+	 * @param string $namespace
+	 * @throws \Exception
 	 */
-	public final static function registerSourceDirectory(Path $Source){
+	public final static function registerSourcePath(Path $Source,
+		string $namespace = self::DEFAULT_NAMESPACE): void {
+
 		if (!$Source->isExists() || !$Source->isDirectory()){
 			throw new Exception('Source path does not exist or not a directory!');
 		}
 
-		self::$Source = $Source;
+		if (!preg_match('/^(?:[A-Za-z0-9]{3,32}|'
+			. preg_quote(self::DEFAULT_NAMESPACE, '/') . ')$/', $namespace)){
+				throw new \Exception(sprintf('Invalid namespace: %s!', $namespace));
+		}
+
+		if (isset(self::$Sources[$namespace = strtolower($namespace)])){
+			throw new \Exception(sprintf('Namespace is already registered: %s!', $namespace));
+		}
+
+		self::$Sources[$namespace] = $Source;
 	}
 
 	/**
+	 * @param string $filename
 	 * @return Path
 	 * @throws \Exception
 	 */
-	protected final static function getSoursePath(): Path {
-		return self::$Source->toPath();
+	public final static function findSoursePath(string &$filename): Path {
+		if (!isset(self::$Sources[$namespace = Regexp::create('/^([^:]+):/')
+			->retrieve($filename, 1)])){
+
+			if (!empty($namespace) || !isset(self::$Sources[self::DEFAULT_NAMESPACE])) {
+				throw new \Exception(sprintf('Undefined namespace: %s!', $namespace));
+			}
+
+			return self::$Sources[self::DEFAULT_NAMESPACE];
+		}
+
+		return self::$Sources[$namespace]->toPath();
 	}
 
 	/**

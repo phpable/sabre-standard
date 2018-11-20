@@ -145,7 +145,7 @@ Delegate::token(new SToken('foreach', function (string $condition) {
 
 /** @noinspection PhpUnhandledExceptionInspection */
 Delegate::token(new SToken('include', function (string $filename, Queue $Queue) {
-	$Queue->immediately(self::getSoursePath()->append(trim($filename, '\'"')
+	$Queue->immediately(Delegate::findSoursePath($filename)->append($filename
 		. '.sabre')->toFile()->toReader());
 }, 1, false));
 
@@ -155,7 +155,9 @@ Delegate::token(new SToken('involve', function ($filename, $params, Queue $Queue
 		throw new \Exception('The assigned parameter is not an array!');
 	}
 
-	($Buffer = new WritingBuffer())->write($Compiler->compile(self::getSoursePath()->append(trim($filename, '\'"') . '.sabre')->toFile()->toReader()));
+	($Buffer = new WritingBuffer())->write($Compiler->compile(Delegate::findSoursePath($filename)->append($filename
+		. '.sabre')->toFile()->toReader()));
+
 	return $Buffer->process(function($content) use ($filename, $params){
 		return '<?php if(!function_exists("' . ($name = 'f_' . md5(implode([microtime(true), $filename, $params]))) . '")){ function ' .  $name . '($__data,$__export,$__obj){'
 			. 'extract($__data);unset($__data); ?>' . "\n" . $content . "\n<?php }} " . $name . "(" . $params . ', $__obj->c(get_defined_vars()), $__obj); ?>';
@@ -172,7 +174,7 @@ Delegate::token(new SToken('list', function ($dirname, $condition, $params, Queu
 	$Items = [];
 	$Output = new WritingBuffer();
 
-	foreach (self::getSoursePath()->append($dirname)->toDirectory()
+	foreach (Delegate::findSoursePath($dirname)->append($dirname)->toDirectory()
 		->filter('*.sabre') as $Path){
 
 			if (!$Path->isDot() && $Path->isFile()){
@@ -239,7 +241,7 @@ Delegate::token(new SToken('set', function ($name, $value) {
 
 /** @noinspection PhpUnhandledExceptionInspection */
 Delegate::token(new SToken('extends', function (string $name, Queue $Queue) {
-	$Queue->add(self::getSoursePath()->append(trim($name, '\'"') . '.sabre')->toFile()->toReader());
+	$Queue->add(Delegate::findSoursePath($name)->append($name . '.sabre')->toFile()->toReader());
 }, 1, false));
 
 /** @noinspection PhpUnhandledExceptionInspection */
