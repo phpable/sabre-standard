@@ -78,7 +78,7 @@ class Delegate extends AFacade {
 				throw new \Exception(sprintf('Undefined namespace: %s!', $namespace));
 			}
 
-			return self::$Sources[self::DEFAULT_NAMESPACE];
+			return self::$Sources[self::DEFAULT_NAMESPACE]->toPath();
 		}
 
 		return self::$Sources[$namespace]->toPath();
