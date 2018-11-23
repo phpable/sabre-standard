@@ -164,14 +164,14 @@ Delegate::token(new SToken('declare', function ($name, $value) {
 }, 2, false));
 
 /** @noinspection PhpUnhandledExceptionInspection */
-Delegate::token(new SToken('export', function ($name) {
+Delegate::token(new SToken('export', function ($name, $value) {
 	if (!preg_match('/\$[A-Za-z][A-Za-z0-9_]/', $name)){
 		throw new \Exception(sprintf("Invalid variable name: %s!", $name));
 	}
 
 	return '<?php $' . ($name = substr($name, 1)) . ' = isset($__export) && isset($__export["'
-		. $name . '"]) ? $__export["' .  $name . '"] : null; ?>';
-}, 1, false));
+		. $name . '"]) ? $__export["' .  $name . '"] : ' . (!is_null($value) ? $value : 'null') . '; ?>';
+}, 2, false));
 
 /** @noinspection PhpUnhandledExceptionInspection */
 Delegate::token(new SToken('set', function ($name, $value) {
