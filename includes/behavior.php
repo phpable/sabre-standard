@@ -144,6 +144,49 @@ Delegate::token(new SToken('foreach', function (string $condition) {
 }, 1));
 
 /** @noinspection PhpUnhandledExceptionInspection */
+Delegate::token(new SToken('declare', function ($name, $value) {
+	if (!preg_match('/\$[A-Za-z][A-Za-z0-9_]/', $name)){
+		throw new \Exception(sprintf("Invalid variable name: %s!", $name));
+	}
+
+	if (preg_match('/^\{[A-Za-z0-9_,\s]+\}$/', $value)){
+		return '<?php if (!isset(' . $name . ')){ ' . $name . ' = new stdClass(); }' . ' foreach (json_decode(\''
+			. json_encode(parseObjectNotation($value)) . '\', true) as $' . ($tmp = '_' . md5(implode([microtime(), $name]))) . '){'
+				. 'if (!isset(' . $name . '->{$' . $tmp .'})){' . $name . '->{$' . $tmp . '} = null; }}?>';
+	}
+
+	if (!is_null($value) && !checkFragmentSyntax($value)){
+		throw new \Exception('Invalid syntax!');
+	}
+
+	return '<?php if (!isset(' . $name . ')){ ' . $name . ' = '
+		. (!is_null($value)? $value : 'null') . '; }?>';
+}, 2, false));
+
+/** @noinspection PhpUnhandledExceptionInspection */
+Delegate::token(new SToken('export', function ($name) {
+	if (!preg_match('/\$[A-Za-z][A-Za-z0-9_]/', $name)){
+		throw new \Exception(sprintf("Invalid variable name: %s!", $name));
+	}
+
+	return '<?php $' . ($name = substr($name, 1)) . ' = isset($__export) && isset($__export["'
+		. $name . '"]) ? $__export["' .  $name . '"] : null; ?>';
+}, 1, false));
+
+/** @noinspection PhpUnhandledExceptionInspection */
+Delegate::token(new SToken('set', function ($name, $value) {
+	if (!preg_match('/\$[A-Za-z][A-Za-z0-9_]/', $name)){
+		throw new \Exception(sprintf("Invalid variable name: %s!", $name));
+	}
+
+	if (!is_null($value) && !checkFragmentSyntax($value)){
+		throw new \Exception('Invalid syntax!');
+	}
+
+	return '<?php ' . $name . ' = ' . (!is_null($value)? $value : 'null') . '; ?>';
+}, 2, false));
+
+/** @noinspection PhpUnhandledExceptionInspection */
 Delegate::token(new SToken('include', function (string $filename, Queue $Queue) {
 	$Queue->immediately(Delegate::findSoursePath($filename)->append($filename
 		. '.sabre')->toFile()->toReader());
@@ -195,49 +238,6 @@ Delegate::token(new SToken('list', function ($dirname, $condition, $params, Queu
 			return 'case "' . $name . '": ' . $value . '(' . $params . ', $__obj->c(get_defined_vars()), $__obj); break;';
 		})). "} ?>"; })->toReadingBuffer();
 }, 3, false, true));
-
-/** @noinspection PhpUnhandledExceptionInspection */
-Delegate::token(new SToken('declare', function ($name, $value) {
-	if (!preg_match('/\$' . Reglib::VAR. '/', $name)){
-		throw new \Exception('Invalid declaration name!');
-	}
-
-	if (preg_match('/^\{[A-Za-z0-9_,\s]+\}$/', $value)){
-		return '<?php if (!isset(' . $name . ')){ ' . $name . ' = new stdClass(); }' . ' foreach (json_decode(\''
-			. json_encode(parseObjectNotation($value)) . '\', true) as $' . ($tmp = '_' . md5(implode([microtime(), $name]))) . '){'
-				. 'if (!isset(' . $name . '->{$' . $tmp .'})){' . $name . '->{$' . $tmp . '} = null; }}?>';
-	}
-
-	if (!is_null($value) && !checkFragmentSyntax($value)){
-		throw new \Exception('Invalid syntax!');
-	}
-
-	return '<?php if (!isset(' . $name . ')){ ' . $name . ' = '
-		. (!is_null($value)? $value : 'null') . '; }?>';
-}, 2, false));
-
-/** @noinspection PhpUnhandledExceptionInspection */
-Delegate::token(new SToken('export', function ($name) {
-	if (!preg_match('/\$' . Reglib::VAR. '/', $name)){
-		throw new \Exception('Invalid entity name!');
-	}
-
-	return '<?php if (isset($__export) && isset($__export["' . ($name = substr($name, 1)) . '"])){ $'
-		. $name . ' = $__export["' .  $name . '"]; }?>';
-}, 1, false));
-
-/** @noinspection PhpUnhandledExceptionInspection */
-Delegate::token(new SToken('set', function ($name, $value) {
-	if (!preg_match('/\$' . Reglib::VAR. '/', $name)){
-		throw new \Exception('Invalid variable name!');
-	}
-
-	if (!is_null($value) && !checkFragmentSyntax($value)){
-		throw new \Exception('Invalid syntax!');
-	}
-
-	return '<?php ' . $name . ' = ' . (!is_null($value)? $value : 'null') . '; ?>';
-}, 2, false));
 
 /** @noinspection PhpUnhandledExceptionInspection */
 Delegate::token(new SToken('extends', function (string $name, Queue $Queue) {
