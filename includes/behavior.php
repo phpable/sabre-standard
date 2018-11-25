@@ -164,16 +164,6 @@ Delegate::token(new SToken('declare', function ($name, $value) {
 }, 2, false));
 
 /** @noinspection PhpUnhandledExceptionInspection */
-Delegate::token(new SToken('export', function ($name, $value) {
-	if (!preg_match('/\$[A-Za-z][A-Za-z0-9_]/', $name)){
-		throw new \Exception(sprintf("Invalid variable name: %s!", $name));
-	}
-
-	return '<?php $' . ($name = substr($name, 1)) . ' = isset($__export) && isset($__export["'
-		. $name . '"]) ? $__export["' .  $name . '"] : ' . (!is_null($value) ? $value : 'null') . '; ?>';
-}, 2, false));
-
-/** @noinspection PhpUnhandledExceptionInspection */
 Delegate::token(new SToken('set', function ($name, $value) {
 	if (!preg_match('/\$[A-Za-z][A-Za-z0-9_]/', $name)){
 		throw new \Exception(sprintf("Invalid variable name: %s!", $name));
@@ -203,7 +193,7 @@ Delegate::token(new SToken('involve', function ($filename, $params, Queue $Queue
 
 	return $Buffer->process(function($content) use ($filename, $params){
 		return '<?php if(!function_exists("' . ($name = 'f_' . md5(implode([microtime(true), $filename, $params]))) . '")){ function ' .  $name . '($__data,$__export,$__obj){'
-			. 'extract($__data);unset($__data); ?>' . "\n" . $content . "\n<?php }} " . $name . "(" . $params . ', $__obj->c(get_defined_vars()), $__obj); ?>';
+			. 'extract($__export);unset($__export);extract($__data);unset($__data); ?>' . "\n" . $content . "\n<?php }} " . $name . "(" . $params . ', $__obj->f(get_defined_vars()), $__obj); ?>';
 	})->toReadingBuffer();
 }, 2, false, true));
 
@@ -225,7 +215,7 @@ Delegate::token(new SToken('list', function ($dirname, $condition, $params, Queu
 
 				$Output->write(WritingBuffer::create($Compiler->compile($Path->toFile()->toReader()))->process(function($content) use ($name){
 					return '<?php if(!function_exists("' . $name .'")){ function ' . $name . '($__data,$__export,$__obj){'
-						. 'extract($__data);unset($__data); ?>' . "\n" . $content . "\n<?php }} ?>";
+						. 'extract($__export);unset($__export);extract($__data);unset($__data); ?>' . "\n" . $content . "\n<?php }} ?>";
 				})->toReadingBuffer()->read());
 
 				$Items[RegExp::create('/\.sabre$/')
@@ -235,7 +225,7 @@ Delegate::token(new SToken('list', function ($dirname, $condition, $params, Queu
 
 	return $Output->process(function ($content) use ($condition, $Items, $params) {
 		return $content .= "<?php switch (" . $condition . "){" . Str::join("\n", Arr::each($Items, function($name, $value) use ($params){
-			return 'case "' . $name . '": ' . $value . '(' . $params . ', $__obj->c(get_defined_vars()), $__obj); break;';
+			return 'case "' . $name . '": ' . $value . '(' . $params . ', $__obj->f(get_defined_vars()), $__obj); break;';
 		})). "} ?>"; })->toReadingBuffer();
 }, 3, false, true));
 
@@ -250,17 +240,17 @@ Delegate::token(new SToken('section', function (string $name, Queue $Queue) {
 		throw new \Exception('Invalid section name "' . $name. '"!');
 	}
 
-	return '<?php $__obj->s("' . $name . '", function ($__data){'
+	return '<?php $__obj->s("' . $name . '", function ($__data, $__obj){'
 		. 'extract($__data);unset($__data);?>';
 }, 1));
 
 /** @noinspection PhpUnhandledExceptionInspection */
 Delegate::finalize('section', new SToken('end', function () {
-	return '<?php }, $__obj->f(get_defined_vars()));?>';
+	return '<?php }, $__obj->f(get_defined_vars()), $__obj);?>';
 }));
 
 /** @noinspection PhpUnhandledExceptionInspection */
 Delegate::token(new SToken('yield', function (string $name, Queue $Queue) {
-	return '<?php $__obj->s("' . trim($name, '\'"') . '"); ?>';
+	return '<?php $__obj->s("' . $name . '"); ?>';
 }, 1, false));
 
