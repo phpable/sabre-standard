@@ -17,6 +17,8 @@ use \Able\Sabre\Structures\SToken;
 use \Able\Helpers\Str;
 use \Able\Helpers\Arr;
 
+use \Able\Minify\Php;
+
 /**
  * @method static void hook(string $token, callable $Handler)
  * @method static void trap(STrap $Signature)
@@ -106,20 +108,6 @@ class Delegate extends AFacade {
 	}
 
 	/**
-	 * @var Files[]
-	 */
-	private static $Raw = [];
-
-	/**
-	 * @param File $File
-	 * @return void
-	 */
-	public final static function prepend(File $File): void {
-		array_push(self::$Raw, $File->toReadingBuffer()->process(function ($value){
-			return (new Regexp('/\s*\\?>$/'))->erase(trim($value)) . "\n?>\n"; }));
-	}
-
-	/**
 	 * @const int
 	 */
 	public const CO_SKIP_RAW = 0b0001;
@@ -150,9 +138,8 @@ class Delegate extends AFacade {
 		yield '<?php }}?>';
 
 		if (~$mode & self::CO_SKIP_RAW) {
-			foreach (self::$Raw as $Reader) {
-				yield from $Reader->read();
-			}
+			yield (new Php())->minify(Path::create(dirname(__DIR__),
+				'includes', 'prepared.php')->toFile()->getContent() . ' ?>');
 		}
 
 		if (~$mode & self::CO_SKIP_CALL) {
@@ -179,6 +166,3 @@ class Delegate extends AFacade {
 		}
 	}
 }
-
-/** @noinspection PhpUnhandledExceptionInspection */
-Delegate::prepend((new Path(dirname(__DIR__), 'includes', 'prepared.php'))->toFile());
