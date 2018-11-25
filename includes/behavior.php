@@ -221,7 +221,7 @@ Delegate::token(new SToken('list', function ($dirname, $condition, $params, Queu
 		->filter('*.sabre') as $Path){
 
 			if (!$Path->isDot() && $Path->isFile()){
-				$name = 'f_' . md5(implode([microtime(true), $Path->toString(), $params]));
+				$name = 'v_' . md5(implode([microtime(true), $Path->toString(), $params]));
 
 				$Output->write(WritingBuffer::create($Compiler->compile($Path->toFile()->toReader()))->process(function($content) use ($name){
 					return '<?php if(!function_exists("' . $name .'")){ function ' . $name . '($__data,$__export,$__obj){'
