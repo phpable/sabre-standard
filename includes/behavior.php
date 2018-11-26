@@ -89,22 +89,22 @@ function parseObjectNotation(string &$source): array {
 }
 
 /** @noinspection PhpUnhandledExceptionInspection */
-Delegate::hook('{{--', function(Queue $Queue, SState $SState){
+Delegate::switch('{{--', function(Queue $Queue, SState $SState){
 	$SState->ignore = true;
 });
 
 /** @noinspection PhpUnhandledExceptionInspection */
-Delegate::hook('--}}', function(Queue $Queue, SState $SState){
+Delegate::switch('--}}', function(Queue $Queue, SState $SState){
 	$SState->ignore = false;
 });
 
 /** @noinspection PhpUnhandledExceptionInspection */
-Delegate::hook('{{##', function(Queue $Queue, SState $SState){
+Delegate::switch('{{##', function(Queue $Queue, SState $SState){
 	$SState->verbatim = true;
 });
 
 /** @noinspection PhpUnhandledExceptionInspection */
-Delegate::hook('##}}', function(Queue $Queue, SState $SState){
+Delegate::switch('##}}', function(Queue $Queue, SState $SState){
 	$SState->verbatim = false;
 });
 

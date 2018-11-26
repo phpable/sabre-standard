@@ -20,7 +20,7 @@ use \Able\Helpers\Arr;
 use \Able\Minify\Php;
 
 /**
- * @method static void hook(string $token, callable $Handler)
+ * @method static void switch(string $token, callable $Handler)
  * @method static void trap(STrap $Signature)
  * @method static void token(SToken $Signature)
  * @method static void extend(string $token, SToken $Signature)
