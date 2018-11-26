@@ -25,7 +25,6 @@ use \Able\Minify\Php;
  * @method static void token(SToken $Signature)
  * @method static void extend(string $token, SToken $Signature)
  * @method static void finalize(string $token, SToken $Signature)
- * @method static void ignore(string $token)
  */
 class Delegate extends AFacade {
 
