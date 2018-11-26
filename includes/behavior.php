@@ -254,3 +254,6 @@ Delegate::token(new SToken('yield', function (string $name, Queue $Queue) {
 	return '<?php $__obj->s("' . $name . '"); ?>';
 }, 1, false));
 
+/** @noinspection PhpUnhandledExceptionInspection */
+Delegate::ignore('media');
+
