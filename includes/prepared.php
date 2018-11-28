@@ -59,19 +59,24 @@ if (!function_exists('__init')) {
 						unset($Cache[$name]);
 					}
 				} else {
-					ob_start();
-					$level = ob_get_level();
+					$key = $key ?? md5(strval(time()
+						* microtime(true) * sizeof($Cache)));
 
-					call_user_func($handler, ...array_slice(func_get_args(), 3));
-					while (ob_get_level() > $level) {
-						ob_get_clean();
+					if (!isset($Cache[$name]) || !isset($Cache[$name][$key])) {
+						ob_start();
+						$level = ob_get_level();
+
+						call_user_func($handler, ...array_slice(func_get_args(), 3));
+						while (ob_get_level() > $level) {
+							ob_get_clean();
+						}
+
+						if (!isset($Cache[$name])) {
+							$Cache[$name] = [];
+						}
+
+						$Cache[$name][$key] = ob_get_clean();
 					}
-
-					if (!isset($Cache[$name])) {
-						$Cache[$name] = [];
-					}
-
-					$Cache[$name][$key ?? md5(time() * count($Cache[$name]))] = ob_get_clean();
 				}
 			}
 		};
