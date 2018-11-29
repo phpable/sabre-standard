@@ -240,7 +240,7 @@ Delegate::token(new SToken('section', function (string $name, Queue $Queue) {
 		throw new \Exception('Invalid section name "' . $name. '"!');
 	}
 
-	return '<?php $__obj->c("' . $name . '", null, function ($__data, $__obj){'
+	return '<?php $__obj->c("' . $name . '", function ($__data, $__obj){'
 		. 'extract($__data);unset($__data);?>';
 }, 1));
 

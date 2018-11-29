@@ -43,11 +43,10 @@ if (!function_exists('__init')) {
 			 * or prints previously collected fragments if the second argument isn't specified.
 			 *
 			 * @param string $name
-			 * @param string $key
 			 * @param callable handler
 			 * @return void
 			 */
-			public function c($name,  $key = null, $handler = null): void {
+			public function c($name,  $handler = null): void {
 				static $Cache = [];
 
 				if (is_null($handler)) {
@@ -59,24 +58,19 @@ if (!function_exists('__init')) {
 						unset($Cache[$name]);
 					}
 				} else {
-					$key = $key ?? md5(strval(time()
-						* microtime(true) * sizeof($Cache)));
+					ob_start();
+					$level = ob_get_level();
 
-					if (!isset($Cache[$name]) || !isset($Cache[$name][$key])) {
-						ob_start();
-						$level = ob_get_level();
-
-						call_user_func($handler, ...array_slice(func_get_args(), 3));
-						while (ob_get_level() > $level) {
-							ob_get_clean();
-						}
-
-						if (!isset($Cache[$name])) {
-							$Cache[$name] = [];
-						}
-
-						$Cache[$name][$key] = ob_get_clean();
+					call_user_func($handler, ...array_slice(func_get_args(), 2));
+					while (ob_get_level() > $level) {
+						ob_get_clean();
 					}
+
+					if (!isset($Cache[$name])) {
+						$Cache[$name] = [];
+					}
+
+					array_push($Cache[$name], ob_get_clean());
 				}
 			}
 		};
