@@ -34,7 +34,7 @@ if (!function_exists('__init')) {
 			public function f($value) {
 				return is_array($value) ? (array_filter($value, function ($key) {
 					return !in_array($key, ['GLOBALS', '_POST', '_GET', '_REQUEST', '_FILES',
-						'_SESSION', '_SERVER', '_ENV', '_COOKIE', '__obj']);
+						'_SESSION', '_SERVER', '_ENV', '_COOKIE']);
 				}, ARRAY_FILTER_USE_KEY)) : [];
 			}
 
