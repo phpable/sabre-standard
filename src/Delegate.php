@@ -118,6 +118,25 @@ class Delegate extends AFacade {
 	public const CO_SKIP_CALL = 0b0010;
 
 	/**
+	 * Initialize the standard compiler's behavior.
+	 * @throws \Exception
+	 */
+	public final static function initialize(): void {
+		try {
+			if (!file_exists($Path = (new Path(__DIR__))->getParent()->append('includes', 'behavior.php'))) {
+				throw new \Exception('Can not load behavior!');
+			}
+
+			include($Path->toString());
+		}catch (\Throwable $Exception){
+
+			/** @noinspection PhpUnhandledExceptionInspection */
+			throw new \ErrorException('Cannot load behavior: ' . $Exception->getMessage(), 0, 1,
+				$Exception->getFile(), $Exception->getLine(), $Exception);
+		}
+	}
+
+	/**
 	 * @param IReader $Reader
 	 * @param int $mode
 	 * @param string $name
@@ -144,25 +163,6 @@ class Delegate extends AFacade {
 
 		if (~$mode & self::CO_SKIP_CALL) {
 			yield '<?php ' . $name . '(__init(), $__data ?? []);?>';
-		}
-	}
-
-	/**
-	 * Initialize the standard compiler's behavior.
-	 * @throws \Exception
-	 */
-	public final static function initialize(): void {
-		try {
-			if (!file_exists($Path = (new Path(__DIR__))->getParent()->append('includes', 'behavior.php'))) {
-				throw new \Exception('Can not load behavior!');
-			}
-
-			include($Path->toString());
-		}catch (\Throwable $Exception){
-
-			/** @noinspection PhpUnhandledExceptionInspection */
-			throw new \ErrorException('Cannot load behavior: ' . $Exception->getMessage(), 0, 1,
-				$Exception->getFile(), $Exception->getLine(), $Exception);
 		}
 	}
 }

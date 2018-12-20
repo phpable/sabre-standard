@@ -185,7 +185,7 @@ Delegate::token(new SToken('include', function (string $filename, Queue $Queue) 
 /** @noinspection PhpUnhandledExceptionInspection */
 Delegate::token(new SToken('involve', function ($filename, $params, Queue $Queue, Compiler $Compiler) {
 	if (!checkArraySyntax($params = preg_replace('/\s*,\s*/', ',', !is_null($params) ? $params : '[]'))){
-		throw new \Exception('The assigned parameter is not an array!');
+		throw new \Exception('The assigned parameter нis not an array!');
 	}
 
 	($Buffer = new WritingBuffer())->write($Compiler->compile(Delegate::findSoursePath($filename)->append($filename
