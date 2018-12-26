@@ -2,6 +2,7 @@
 namespace Able\Sabre\Standard;
 
 use \Able\Facades\AFacade;
+use \Able\Facades\Structures\SInit;
 
 use \Able\IO\File;
 use \Able\IO\Path;
@@ -99,15 +100,6 @@ class Delegate extends AFacade {
 	}
 
 	/**
-	 * @return array
-	 */
-	protected static final function provide(): array {
-		return [function($filepath){
-			array_push(self::$History, $filepath);
-		}];
-	}
-
-	/**
 	 * @const int
 	 */
 	public const CO_SKIP_RAW = 0b0001;
@@ -121,19 +113,23 @@ class Delegate extends AFacade {
 	 * Initialize the standard compiler's behavior.
 	 * @throws \Exception
 	 */
-	public final static function initialize(): void {
-		try {
-			if (!file_exists($Path = (new Path(__DIR__))->getParent()->append('includes', 'behavior.php'))) {
-				throw new \Exception('Can not load behavior!');
+	protected final static function initialize(): SInit {
+		return new SInit([function($filepath){
+			array_push(self::$History, $filepath);
+		}], function(){
+			try {
+				if (!file_exists($Path = (new Path(__DIR__))->getParent()->append('includes', 'behavior.php'))) {
+					throw new \Exception('Can not load behavior!');
+				}
+
+				include($Path->toString());
+			}catch (\Throwable $Exception){
+
+				/** @noinspection PhpUnhandledExceptionInspection */
+				throw new \ErrorException('Cannot load behavior: ' . $Exception->getMessage(), 0, 1,
+					$Exception->getFile(), $Exception->getLine(), $Exception);
 			}
-
-			include($Path->toString());
-		}catch (\Throwable $Exception){
-
-			/** @noinspection PhpUnhandledExceptionInspection */
-			throw new \ErrorException('Cannot load behavior: ' . $Exception->getMessage(), 0, 1,
-				$Exception->getFile(), $Exception->getLine(), $Exception);
-		}
+		});
 	}
 
 	/**
