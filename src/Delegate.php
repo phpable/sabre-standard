@@ -21,7 +21,6 @@ use \Able\Helpers\Arr;
 use \Able\Minify\Php;
 
 /**
- * @method static Compiler getRecipientInstance()
  * @method static void switch(string $token, callable $Handler)
  * @method static void trap(STrap $Signature)
  * @method static void token(SToken $Signature)
@@ -86,14 +85,6 @@ class Delegate extends AFacade {
 		}
 
 		return self::$Sources[$namespace]->toPath();
-	}
-
-	/**
-	 * @return string[]
-	 * @throws \Throwable
-	 */
-	public final static function history(): array {
-		return self::getRecipientInstance()->history();
 	}
 
 	/**
