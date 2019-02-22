@@ -8,8 +8,7 @@ use \Able\IO\File;
 use \Able\IO\Path;
 use \Able\IO\Abstractions\IReader;
 
-use \Able\Reglib\Reglib;
-use \Able\Reglib\Regexp;
+use \Able\Reglib\Regex;
 
 use \Able\Sabre\Compiler;
 use \Able\Sabre\Structures\STrap;
@@ -74,7 +73,7 @@ class Delegate extends AFacade {
 	 * @throws \Exception
 	 */
 	public final static function findSoursePath(string &$filename): Path {
-		if (!isset(self::$Sources[$namespace = Regexp::create('/^([^:]+):/')
+		if (!isset(self::$Sources[$namespace = Regex::create('/^([^:]+):/')
 			->retrieve($filename, 1)])){
 
 			if (!empty($namespace) || !isset(self::$Sources[self::DEFAULT_NAMESPACE])) {

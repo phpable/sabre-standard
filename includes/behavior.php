@@ -14,8 +14,7 @@ use \Able\IO\File;
 use \Able\IO\Path;
 use \Able\IO\WritingBuffer;
 
-use \Able\Reglib\Regexp;
-use \Able\Reglib\Reglib;
+use \Able\Reglib\Regex;
 
 use \Able\Helpers\Str;
 use \Able\Helpers\Arr;
@@ -80,7 +79,7 @@ function parseObjectNotation(string &$source): array {
 	return Arr::each(preg_split('/\s*,+\s*/', trim(substr(BracketsParser::parse($source,
 		BracketsParser::BT_CURLY), 1, -1))), function ($key, $value){
 
-		if (!preg_match('/^' . Reglib::VAR . '$/', $value)){
+		if (!preg_match('/^' . Regex::RE_VARIABLE . '$/', $value)){
 			throw new \Exception('Invalid property declaration!');
 		}
 
@@ -218,7 +217,7 @@ Delegate::token(new SToken('list', function ($dirname, $condition, $params, Queu
 						. 'extract($__export);unset($__export);extract($__data);unset($__data); ?>' . "\n" . $content . "\n<?php }} ?>";
 				})->toReadingBuffer()->read());
 
-				$Items[RegExp::create('/\.sabre$/')
+				$Items[Regex::create('/\.sabre$/')
 					->erase(basename($Path->toString()))] = $name;
 			}
 	}
@@ -236,7 +235,7 @@ Delegate::token(new SToken('extends', function (string $name, Queue $Queue) {
 
 /** @noinspection PhpUnhandledExceptionInspection */
 Delegate::token(new SToken('section', function (string $name, Queue $Queue) {
-	if (!preg_match('/^' . Reglib::VAR . '$/', $name = trim($name, '\'"'))){
+	if (!preg_match('/^' . Regex::RE_VARIABLE . '$/', $name = trim($name, '\'"'))){
 		throw new \Exception('Invalid section name "' . $name. '"!');
 	}
 
