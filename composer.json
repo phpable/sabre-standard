@@ -13,6 +13,7 @@
 	"require": {
 		"php": ">=7.2.0",
 		"able/io": "dev-master",
+		"able/crow": "dev-master",
 		"able/sabre": "dev-master",
 		"able/minify": "dev-master",
 		"able/facades": "dev-master"
