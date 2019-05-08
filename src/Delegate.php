@@ -1,6 +1,8 @@
 <?php
 namespace Able\Sabre\Standard;
 
+use \Able\Crow\Engine;
+
 use \Able\Facades\AFacade;
 use \Able\Facades\Structures\SInit;
 
@@ -20,6 +22,9 @@ use \Able\Helpers\Arr;
 use \Able\Minify\Php;
 
 use \Exception;
+use \Generator;
+
+use function MongoDB\BSON\fromJSON;
 
 /**
  * @method static void directive(string $token, callable $Handler)
@@ -59,11 +64,11 @@ class Delegate extends AFacade {
 
 		if (!preg_match('/^(?:[A-Za-z0-9]{3,32}|'
 			. preg_quote(self::DEFAULT_NAMESPACE, '/') . ')$/', $namespace)){
-				throw new \Exception(sprintf('Invalid namespace: %s!', $namespace));
+				throw new Exception(sprintf('Invalid namespace: %s!', $namespace));
 		}
 
 		if (isset(self::$Sources[$namespace = strtolower($namespace)])){
-			throw new \Exception(sprintf('Namespace is already registered: %s!', $namespace));
+			throw new Exception(sprintf('Namespace is already registered: %s!', $namespace));
 		}
 
 		self::$Sources[$namespace] = $Source;
@@ -79,7 +84,7 @@ class Delegate extends AFacade {
 			->retrieve($filename, 1)])){
 
 			if (!empty($namespace) || !isset(self::$Sources[self::DEFAULT_NAMESPACE])) {
-				throw new \Exception(sprintf('Undefined namespace: %s!', $namespace));
+				throw new Exception(sprintf('Undefined namespace: %s!', $namespace));
 			}
 
 			return self::$Sources[self::DEFAULT_NAMESPACE]->toPath();
@@ -96,7 +101,7 @@ class Delegate extends AFacade {
 		return new SInit([], function(){
 			try {
 				if (!file_exists($Path = (new Path(__DIR__))->getParent()->append('includes', 'behavior.php'))) {
-					throw new \Exception('Can not load behavior!');
+					throw new Exception('Can not load behavior!');
 				}
 
 				include($Path->toString());
@@ -110,20 +115,37 @@ class Delegate extends AFacade {
 
 	/**
 	 * @param IReader $Reader
-	 * @return \Generator
-	 * @throws \Exception
+	 * @return Generator
+	 * @throws Exception
 	 */
-	public static final function compile(IReader $Reader): \Generator {
-		yield '<?php call_user_func(function($__obj, $__data){'
-			. 'extract($__data); unset($__data); ?>';
+	public static final function compile(IReader $Reader): Generator {
+//		_dumpe(Path::create(dirname(__DIR__), 'crow', 'wrapper.php')->toFile());
+		$Engine = new Engine();
 
-		yield from parent::compile($Reader);
+		$Engine->resolve('content', function() {
+			yield '// @1';
+//			_dumpe(__LINE__, func_get_args());
+		});
 
-		yield '<?php }, call_user_func(function(){ ?>';
+		$Engine->resolve('prepared', function() {
+			yield '// @2';
+//			_dumpe(__LINE__, func_get_args());
+		});
 
-		yield (new Php())->minify(Path::create(dirname(__DIR__),
-			'includes', 'prepared.php')->toFile()->getContent() . ' ?>');
+		yield implode(iterator_to_array($Engine->parse(Path::create(dirname(__DIR__), 'crow', 'wrapper.php')->toFile())));
 
-		yield '<?php }), $__data);?>';
+//		yield from $Engine->parse(Path::create(dirname(__DIR__), 'crow', 'wrapper.php')->toFile());
+
+//		yield '<?php call_user_func(function($__obj, $__data){'
+/*			. 'extract($__data); unset($__data); ?>';*/
+//
+//		yield from parent::compile($Reader);
+//
+/*		yield '<?php }, call_user_func(function(){ ?>';*/
+//
+//		yield (new Php())->minify(Path::create(dirname(__DIR__),
+/*			'includes', 'prepared.php')->toFile()->getContent() . ' ?>');*/
+//
+/*		yield '<?php }), $__data);?>';*/
 	}
 }
