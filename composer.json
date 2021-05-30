@@ -12,11 +12,11 @@
 	],
 	"require": {
 		"php": ">=7.2.0",
-		"able/io": "dev-master",
+		"able/io": "^0.9.1",
 		"able/crow": "dev-master",
 		"able/sabre": "dev-master",
 		"able/minify": "dev-master",
-		"able/facades": "dev-master"
+		"able/facades": "^1.0.0"
 	},
 	"autoload": {
 		"psr-4": {
